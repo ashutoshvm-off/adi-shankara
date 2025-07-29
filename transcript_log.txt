@@ -1,0 +1,79 @@
+[2025-07-29 09:06:21] Assistant: Hello, I am your Adi Shankaracharya assistant. Ask me anything about his life, works, or teachings. To begin, say 'Hey Shankara' followed by your question.
+[2025-07-29 09:06:26] User: give me a
+[2025-07-29 09:06:33] User: give me listening
+[2025-07-29 09:06:40] User: self introduction
+[2025-07-29 10:03:14] Assistant: Hello, I am your Adi Shankaracharya assistant. Ask me anything about his life, works, or teachings. To begin, say 'Hey Shankara' followed by your question.
+[2025-07-29 10:03:21] User: you shouldn't that are you did
+[2025-07-29 10:03:27] User: 
+[2025-07-29 10:12:06] Assistant: Hello, I am your Adi Shankaracharya assistant. Ask me anything about his life, works, or teachings.
+[2025-07-29 10:23:33] Assistant: Hello, I am your Adi-Shankaracharya assistant. Ask me anything about his life, works, or teachings.
+[2025-07-29 10:23:42] Assistant: Yes, I am listening...
+[2025-07-29 10:23:48] User: 
+[2025-07-29 10:23:48] Assistant: I'm sorry, I couldn't find a relevant answer.
+[2025-07-29 10:23:49] Assistant: Please ask your question or say 'exit' to quit.
+[2025-07-29 10:23:54] User: 
+[2025-07-29 10:23:54] Assistant: I'm sorry, I couldn't find a relevant answer.
+[2025-07-29 10:23:55] Assistant: Please ask your question or say 'exit' to quit.
+[2025-07-29 10:24:01] User: 
+[2025-07-29 10:24:01] Assistant: I'm sorry, I couldn't find a relevant answer.
+[2025-07-29 10:24:01] Assistant: Please ask your question or say 'exit' to quit.
+[2025-07-29 10:56:59] Assistant: Hello, I am your Adi-Shankaracharya assistant. Ask me anything about his life, works, or teachings.
+[2025-07-29 10:57:09] Assistant: Yes, I am listening...
+[2025-07-29 10:57:15] User: 
+[2025-07-29 10:57:15] Assistant: I'm sorry, I couldn't find a relevant answer.
+[2025-07-29 10:57:15] Assistant: Please ask your question or say 'exit' to quit.
+[2025-07-29 10:58:24] Assistant: Hello, I am your Aadi-Shankaracharya assistant. Ask me anything about his life, works, or teachings.
+[2025-07-29 10:58:55] Assistant: Hello, I am your Aadi-Shankaracharya assistant. Ask me anything about his life, works, or teachings.
+[2025-07-29 11:13:01] Assistant: Hello, I'm your Shankara assistant. Say 'Hey Shankara' to ask me anything.
+[2025-07-29 11:34:15] Assistant: Hello, I am your Shankara assistant. Say 'Hey Shankara' to start.
+[2025-07-29 11:34:41] Assistant: Goodbye!
+[2025-07-29 11:35:47] Assistant: Hello, I am your Shankara assistant. Say 'Hey Shankara' to start.
+[2025-07-29 11:36:28] Assistant: Goodbye!
+[2025-07-29 11:38:22] Assistant: Hello, I am your Shankara assistant. Say 'Hey Shankara' to start.
+[2025-07-29 11:41:08] Assistant: Goodbye!
+[2025-07-29 11:51:26] Assistant: Hello, I am your Shankara assistant. Say Hey Shankara to start.
+[2025-07-29 11:55:47] Assistant: Hello, I am your Shankara assistant. Say Hey Shankara to start.
+[2025-07-29 12:03:35] Assistant: Hello! I am your improved Shankara assistant. Say Hey Shankara to start.
+[2025-07-29 12:03:46] Assistant: Yes, I'm listening. What would you like to know about Shankaracharya?
+[2025-07-29 12:03:56] User: google rakhne se chal raha hai aur shankaracharya
+[2025-07-29 12:03:56] Assistant: Adi Shankaracharya was a great Indian philosopher and theologian who consolidated the doctrine of Advaita Vedanta. He lived in the 8th century and is credited with unifying and establishing the main currents of thought in Hinduism.
+[2025-07-29 12:04:10] Assistant: Yes, I'm listening. What would you like to know about Shankaracharya?
+[2025-07-29 12:04:18] User: you ready
+[2025-07-29 12:04:18] Assistant: His principal disciples were Padmapada, Totakacharya, Hastamalaka, and Sureshwaracharya. They helped spread his teachings and led the mathas.
+[2025-07-29 12:09:33] Assistant: Hello, I am your Shankara assistant. Say 'Hey Shankara' to start.
+[2025-07-29 12:10:16] Assistant: Goodbye!
+[2025-07-29 12:10:52] Assistant: Hello! I am your improved Shankara assistant. Say Hey Shankara to start.
+[2025-07-29 12:11:04] Assistant: Yes, I'm listening. What would you like to know about Shankaracharya?
+[2025-07-29 12:11:11] User: what is brahma
+[2025-07-29 12:11:11] Assistant: Nirvana Shatakam is a six-verse Sanskrit poem summarizing the essence of Advaita Vedanta and the realization of the self as Brahman.
+[2025-07-29 12:12:17] Assistant: Yes, I'm listening. What would you like to know about Shankaracharya?
+[2025-07-29 12:12:23] User: where is disciples
+[2025-07-29 12:12:23] Assistant: His principal disciples were Padmapada, Totakacharya, Hastamalaka, and Sureshwaracharya. They helped spread his teachings and led the mathas.
+[2025-07-29 12:16:37] Assistant: Hello, I am your Shankara assistant. Say 'Hey Shankara' to start.
+[2025-07-29 12:17:04] Assistant: Goodbye!
+[2025-07-29 12:25:43] Assistant: Hello, I am your Shankara assistant. Say 'Hey Shankara' to ask me questions about Advaita Vedanta and Shankaracharya's teachings.
+[2025-07-29 12:25:59] Assistant: Yes, I'm listening. What would you like to know?
+[2025-07-29 12:26:09] User: what is Advait (lang: en)
+[2025-07-29 12:26:09] Assistant: Nirvana Shatakam is a six-verse Sanskrit poem summarizing the essence of Advaita Vedanta and the realization of the self as Brahman.
+[2025-07-29 12:26:53] Assistant: Yes, I'm listening. What would you like to know?
+[2025-07-29 12:27:04] User: what are the four mother's established by (lang: en)
+[2025-07-29 12:27:04] Assistant: The four mathas were established to preserve and spread the teachings of Advaita Vedanta and to promote spiritual education and Vedic scholarship.
+[2025-07-29 12:27:56] Assistant: Yes, I'm listening. What would you like to know?
+[2025-07-29 12:28:06] User: work (lang: en)
+[2025-07-29 12:28:06] Assistant: Sorry, I encountered an error. Please try saying 'Hey Shankara' again.
+[2025-07-29 12:28:10] Assistant: Goodbye!
+[2025-07-29 12:43:24] Assistant: Hello! I am your improved Shankara assistant. Say Hey Shankara to start.
+[2025-07-29 12:43:36] Assistant: Yes, I'm listening. What would you like to know about Shankaracharya?
+[2025-07-29 12:43:49] User: i shall not easy and again i
+[2025-07-29 12:43:49] Assistant: He is believed to have attained Mahasamadhi at the age of 32 in Kedarnath, located in the Himalayas.
+[2025-07-29 12:43:58] Assistant: Yes, I'm listening. What would you like to know about Shankaracharya?
+[2025-07-29 12:44:04] User: how are you
+[2025-07-29 12:44:04] Assistant: He played a key role in reviving Hinduism at a time when it was in decline and facing threats from other ideologies. He traveled across India, debating scholars and promoting the teachings of Advaita Vedanta.
+[2025-07-29 12:45:45] Assistant: Hello, I am your Shankara assistant. Say 'Hey Shankara' to ask me questions about Advaita Vedanta and Shankaracharya's teachings.
+[2025-07-29 12:45:50] Assistant: Yes, I'm listening. What would you like to know?
+[2025-07-29 12:45:59] Assistant: I didn't hear your question clearly. Please try again.
+[2025-07-29 12:46:17] Assistant: Yes, I'm listening. What would you like to know?
+[2025-07-29 12:46:25] Assistant: I didn't hear your question clearly. Please try again.
+[2025-07-29 12:46:32] Assistant: Yes, I'm listening. What would you like to know?
+[2025-07-29 12:46:39] User: Holi Shankaracharya travel AC (lang: en)
+[2025-07-29 12:46:39] Assistant: He is said to have traveled extensively on foot, engaging in debates, teaching, and establishing institutions to revive Vedic traditions.
