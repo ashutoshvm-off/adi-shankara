@@ -145,3 +145,5 @@
 [2025-07-31 11:07:21] Assistant: Yes, I'm listening. What would you like to know?
 [2025-07-31 11:07:27] Assistant: I didn't hear your question clearly. Please try saying 'Hey Shankara' again.
 [2025-07-31 11:07:32] Assistant: Goodbye! Om Shanti Shanti Shanti.
+[2025-07-31 20:38:07] Assistant: Hello! I am your Shankara assistant. I'm ready to answer questions about Advaita Vedanta and Shankaracharya's teachings.
+[2025-07-31 20:38:33] Assistant: Goodbye! Om Shanti Shanti Shanti.
