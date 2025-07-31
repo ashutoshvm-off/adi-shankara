@@ -77,3 +77,71 @@
 [2025-07-29 12:46:32] Assistant: Yes, I'm listening. What would you like to know?
 [2025-07-29 12:46:39] User: Holi Shankaracharya travel AC (lang: en)
 [2025-07-29 12:46:39] Assistant: He is said to have traveled extensively on foot, engaging in debates, teaching, and establishing institutions to revive Vedic traditions.
+[2025-07-30 10:02:44] Assistant: Hello, I am your Shankara assistant. Say 'Hey Shankara' to ask me questions about Advaita Vedanta and Shankaracharya's teachings.
+[2025-07-30 10:02:51] Assistant: Yes, I'm listening. What would you like to know?
+[2025-07-30 10:02:59] Assistant: I didn't hear your question clearly. Please try again.
+[2025-07-30 10:03:04] Assistant: Yes, I'm listening. What would you like to know?
+[2025-07-30 10:03:10] User: when and where was Raja Shankar born (lang: en)
+[2025-07-30 10:03:10] Assistant: Adi Shankaracharya was born in Kalady, a village in present-day Kerala, India, around 788 CE.
+[2025-07-30 10:03:25] Assistant: Goodbye!
+[2025-07-30 10:25:07] Assistant: Hello, I am your Shankara assistant. Say 'Hey Shankara' to ask me questions about Advaita Vedanta and Shankaracharya's teachings.
+[2025-07-30 10:25:23] Assistant: Yes, I'm listening. What would you like to know?
+[2025-07-30 10:25:34] User: how is your life going tell me the first thing you did that was a major component in your (lang: en)
+[2025-07-30 10:25:34] Assistant: Sorry, I encountered an error. Please try saying 'Hey Shankara' again.
+[2025-07-30 10:25:42] Assistant: Yes, I'm listening. What would you like to know?
+[2025-07-30 10:25:49] User: what is the date today (lang: en)
+[2025-07-30 10:25:49] Assistant: Vivekachudamani, meaning "The Crest Jewel of Discrimination," is a philosophical treatise that elaborates on the nature of reality, the self, and the path to liberation.
+[2025-07-30 10:26:14] Assistant: Yes, I'm listening. What would you like to know?
+[2025-07-30 10:26:21] User: what is Nirvana saptam (lang: en)
+[2025-07-30 10:26:21] Assistant: Nirvana Shatakam is a six-verse Sanskrit poem summarizing the essence of Advaita Vedanta and the realization of the self as Brahman.
+[2025-07-30 10:26:36] Assistant: Goodbye!
+[2025-07-30 11:38:44] Assistant: Hello, I am your Shankara assistant. Say 'Hey Shankara' to ask me questions about Advaita Vedanta and Shankaracharya's teachings.
+[2025-07-30 11:39:03] Assistant: Goodbye!
+[2025-07-30 11:40:11] Assistant: Hello! I am your improved Shankara assistant. Say Hey Shankara to start.
+[2025-07-30 11:40:25] Assistant: Yes, I'm listening. What would you like to know about Shankaracharya?
+[2025-07-30 11:40:32] User: one thing
+[2025-07-30 11:40:32] Assistant: His principal disciples were Padmapada, Totakacharya, Hastamalaka, and Sureshwaracharya. They helped spread his teachings and led the mathas.
+[2025-07-30 11:43:09] Assistant: Hello, I am your Shankara assistant. Say 'Hey Shankara' to ask me questions about Advaita Vedanta and Shankaracharya's teachings.
+[2025-07-30 11:43:21] Assistant: Yes, I'm listening. What would you like to know?
+[2025-07-30 11:43:31] Assistant: I didn't hear your question clearly. Please try again.
+[2025-07-30 11:44:37] Assistant: Goodbye!
+[2025-07-30 15:07:56] Assistant: Hello! I am your improved Shankara assistant. Say Hey Shankara to start.
+[2025-07-30 15:08:06] Assistant: Yes, I'm listening. What would you like to know about Shankaracharya?
+[2025-07-30 15:08:14] User: when and where was shankaracharya born
+[2025-07-30 15:08:14] Assistant: Adi Shankaracharya was born in Kalady, a village in present-day Kerala, India, around 788 CE.
+[2025-07-30 15:08:53] Assistant: Yes, I'm listening. What would you like to know about Shankaracharya?
+[2025-07-30 15:08:59] User: afloat and all of the images
+[2025-07-30 15:08:59] Assistant: The four mathas were established to preserve and spread the teachings of Advaita Vedanta and to promote spiritual education and Vedic scholarship.
+[2025-07-30 15:09:46] Assistant: Yes, I'm listening. What would you like to know about Shankaracharya?
+[2025-07-30 15:09:51] User: who was adi shankara
+[2025-07-30 15:09:51] Assistant: Adi Shankaracharya was a great Indian philosopher and theologian who consolidated the doctrine of Advaita Vedanta. He lived in the 8th century and is credited with unifying and establishing the main currents of thought in Hinduism.
+[2025-07-30 15:10:47] Assistant: Hello, I am your enhanced Shankara assistant. Say 'Hey Shankara' to ask me questions about Advaita Vedanta and Shankaracharya's teachings.
+[2025-07-30 15:10:51] Assistant: Yes, I'm listening. What would you like to know?
+[2025-07-30 15:10:56] User: who was Raja Shankar (lang: en)
+[2025-07-30 15:10:56] Assistant: Adi Shankaracharya was a great Indian philosopher and theologian who consolidated the doctrine of Advaita Vedanta. He lived in the 8th century and is credited with unifying and establishing the main currents of thought in Hinduism.
+[2025-07-30 15:11:26] Assistant: Yes, I'm listening. What would you like to know?
+[2025-07-30 15:11:30] Assistant: I didn't hear your question clearly. Please try again.
+[2025-07-30 15:12:20] Assistant: Hello! I am your improved Shankara assistant. Say Hey Shankara to start.
+[2025-07-30 15:13:44] Assistant: Yes, I'm listening. What would you like to know about Shankaracharya?
+[2025-07-30 15:13:50] User: do you know who is adil
+[2025-07-30 15:13:50] Assistant: Adi Shankaracharya was a great Indian philosopher and theologian who consolidated the doctrine of Advaita Vedanta. He lived in the 8th century and is credited with unifying and establishing the main currents of thought in Hinduism.
+[2025-07-30 15:17:37] Assistant: Hello! I am your improved Shankara assistant. Say Hey Shankara to start.
+[2025-07-30 15:18:04] Assistant: Yes, I'm listening. What would you like to know about Shankaracharya?
+[2025-07-30 15:18:09] User: who is adi shankara
+[2025-07-30 15:18:09] Assistant: Adi Shankaracharya was a great Indian philosopher and theologian who consolidated the doctrine of Advaita Vedanta. He lived in the 8th century and is credited with unifying and establishing the main currents of thought in Hinduism.
+[2025-07-31 10:46:46] Assistant: Hello, I am your enhanced Shankara assistant. Say 'Hey Shankara' to ask me questions about Advaita Vedanta and Shankaracharya's teachings.
+[2025-07-31 10:47:04] Assistant: Yes, I'm listening. What would you like to know?
+[2025-07-31 10:47:09] User: hu r u (lang: en)
+[2025-07-31 10:47:09] Assistant: Sorry, I encountered an error. Please try saying 'Hey Shankara' again.
+[2025-07-31 10:47:22] Assistant: Goodbye!
+[2025-07-31 10:47:33] Assistant: Hello! I am your Shankara assistant. I'm ready to answer questions about Advaita Vedanta and Shankaracharya's teachings.
+[2025-07-31 10:47:38] Assistant: Goodbye! Om Shanti Shanti Shanti.
+[2025-07-31 11:06:31] Assistant: Hello, I am your enhanced Shankara assistant. Say 'Hey Shankara' to ask me questions about Advaita Vedanta and Shankaracharya's teachings.
+[2025-07-31 11:06:50] Assistant: Yes, I'm listening. What would you like to know?
+[2025-07-31 11:06:55] User: versana born (lang: en)
+[2025-07-31 11:06:55] Assistant: Adi Shankaracharya was born in Kalady, a village in present-day Kerala, India, around 788 CE.
+[2025-07-31 11:06:58] Assistant: Goodbye!
+[2025-07-31 11:07:10] Assistant: Hello! I am your Shankara assistant. I'm ready to answer questions about Advaita Vedanta and Shankaracharya's teachings.
+[2025-07-31 11:07:21] Assistant: Yes, I'm listening. What would you like to know?
+[2025-07-31 11:07:27] Assistant: I didn't hear your question clearly. Please try saying 'Hey Shankara' again.
+[2025-07-31 11:07:32] Assistant: Goodbye! Om Shanti Shanti Shanti.
