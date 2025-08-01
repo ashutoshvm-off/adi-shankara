@@ -1,0 +1,8 @@
+[2025-08-01 10:02:45] Assistant: Hi! I love chatting about Shankara's teachings and the interesting stories about his life. What catches your curiosity?
+[2025-08-01 10:03:02] You: I would like to know where she was born
+[2025-08-01 10:03:03] Assistant: That sounds like you're asking about Shankara's locations! He was born in Kerala, traveled all across India, and established monasteries in four corners of the subcontinent. Which particular place or aspect of his travels are you most curious about?
+[2025-08-01 10:03:15] You: I would like to know various
+[2025-08-01 12:27:39] Assistant: Hi! I love chatting about Shankara's teachings and the interesting stories about his life. What catches your curiosity?
+[2025-08-01 12:28:05] You: where was Adi Shankara born where are you born
+[2025-08-01 12:28:06] Assistant: That sounds like you're asking about Shankara's locations! He was born in Kerala, traveled all across India, and established monasteries in four corners of the subcontinent. Which particular place or aspect of his travels are you most curious about?
+[2025-08-01 12:28:25] You: reply in Malayalam
