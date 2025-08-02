@@ -1385,7 +1385,7 @@ A: Maya is this really subtle concept that Shankara taught about. It's often tra
                 # Return top match with context
                 top_match = best_matches[0]
                 response = f"From {top_match['page']}: {top_match['summary']}"
-                
+                1
                 # Add relevant content snippet if needed
                 if len(query_lower.split()) > 2:  # More detailed query
                     response += f"\n\nMore detail: {top_match['content'][:400]}..."
