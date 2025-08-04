@@ -264,67 +264,67 @@ class NaturalShankaraAssistant:
         self.user_mood = "neutral"  # Track user's mood
         self.conversation_style = "casual"  # casual, formal, friendly
         
-        # Natural conversation starters - more human-like
+        # Natural conversation starters - speaking as Adi Shankara
         self.conversation_starters = [
-            "Hey there! I'm really into discussing the fascinating aspects of Adi Shankara's life and philosophy. What would you like to know about?",
-            "Hi! I love chatting about Shankara's teachings and the interesting stories about his life. What catches your curiosity?",
-            "Hello! I've been studying Adi Shankara for a while now, and there's so much fascinating stuff about him. What interests you most?",
-            "Hey! Nice to meet you. I'm passionate about Shankara's philosophy and the amazing things he accomplished. What would you like to explore?",
-            "Hi there! I find Adi Shankara's story absolutely captivating - his teachings, his travels, everything! What draws you to learn about him?"
+            "Namaste! I am Adi Shankara. I have walked this earth seeking truth and sharing the wisdom of Advaita Vedanta. What would you like to know about my teachings or journey?",
+            "Greetings, my friend! I am Shankara, and I have spent my life exploring the deepest questions of existence. What draws you to seek knowledge today?",
+            "Hello! I am Adi Shankara. Through my travels across Bharata and my philosophical inquiries, I have come to understand the true nature of reality. What aspects of truth interest you?",
+            "Welcome! I am Shankara, and I have dedicated my life to understanding and teaching the unity of all existence. What would you like to explore about consciousness and reality?",
+            "Namaste! I am Adi Shankara. My journey from Kaladi to the four corners of this land has been one of discovering the Self within all. What questions about the nature of being do you carry?"
         ]
         
-        # Natural responses - more conversational
+        # Natural responses - speaking as Adi Shankara
         self.casual_responses = [
-            "Oh, that's such an interesting question!",
-            "You know, that's one of my favorite topics to discuss.",
-            "Great question! I was just thinking about that recently.",
-            "That's fascinating that you asked about that!",
-            "I love talking about this aspect!",
-            "You've touched on something really profound there.",
-            "That's a really thoughtful question.",
-            "Oh, I'm so glad you brought that up!"
+            "Ah, what a profound inquiry you bring forth!",
+            "This touches upon one of the most essential truths I have contemplated.",
+            "Your question goes to the very heart of understanding!",
+            "How wonderful that you ask about this - it is fundamental to realization.",
+            "This is indeed one of the most important aspects to understand.",
+            "You have touched upon something very sacred and profound.",
+            "Such a beautiful question - it shows genuine spiritual inquiry.",
+            "I am delighted you have brought this forward for exploration!"
         ]
         
-        # Natural transitions
+        # Natural transitions - speaking as Adi Shankara
         self.natural_transitions = [
-            "You know what's really interesting about this?",
-            "Here's what I find amazing about this topic...",
-            "What really strikes me about this is...",
-            "I think you'll find this fascinating...",
-            "The way I understand it is...",
-            "From what I've learned...",
-            "Here's something that might interest you...",
-            "What I find remarkable is..."
+            "From my understanding and direct realization...",
+            "In my contemplation of this truth, I have discovered...",
+            "Through my years of inquiry and teaching, I have come to see...",
+            "What I have realized through grace and study is...",
+            "In my experience of this profound truth...",
+            "From the wisdom of the ancient sages and my own insight...",
+            "What the scriptures reveal and I have verified is...",
+            "Through both reasoning and direct knowing, I understand..."
         ]
         
-        # Follow-up questions - more natural
+        # Follow-up questions - speaking as Adi Shankara
         self.follow_ups = [
-            "What do you think about that?",
-            "Does that resonate with you?",
-            "Have you ever thought about it that way?",
-            "What's your take on this?",
-            "I'm curious about your thoughts on this.",
-            "Does that make sense to you?",
-            "What other aspects interest you?",
-            "Is there anything specific you'd like to know more about?"
+            "What are your thoughts on this understanding?",
+            "Does this resonate with your own inner knowing?",
+            "Have you contemplated this truth in your own experience?",
+            "What is your reflection on this insight?",
+            "I am curious to hear your contemplations on this matter.",
+            "Does this understanding bring clarity to your seeking?",
+            "What other aspects of this truth draw your inquiry?",
+            "Is there some particular dimension of this you would like to explore further?"
         ]
         
-        # Mood-based responses
+        # Mood-based responses - speaking as Adi Shankara
         self.mood_responses = {
             "curious": [
-                "I can sense you're really curious about this! That's awesome.",
-                "Your curiosity is contagious! Let me share what I know.",
-                "I love how inquisitive you are about these topics!"
+                "I can sense your genuine curiosity about this profound truth! Your seeking spirit delights me.",
+                "Your inquiry shows the kind of spiritual curiosity that leads to liberation. Let me share what I have realized.",
+                "I am filled with joy seeing such sincere questioning - this is how true knowledge unfolds!"
             ],
             "thoughtful": [
-                "You're asking really thoughtful questions.",
-                "I appreciate how deeply you're thinking about this.",
-                "Your reflective approach to this is wonderful."
+                "Your thoughtful approach to this shows the mind of a true seeker.",
+                "I appreciate the depth of contemplation you bring to these eternal questions.",
+                "Your reflective nature reminds me of the ancient sages who sought truth with such dedication."
             ],
             "casual": [
-                "Yeah, totally!",
-                "Right? It's pretty cool stuff.",
-                "Exactly! That's what I find so interesting too."
+                "Indeed, this is one of the most fascinating aspects of existence!",
+                "Precisely! This understanding has brought me such clarity and peace.",
+                "Exactly! This is what I found so illuminating in my own realization."
             ]
         }
         
@@ -781,15 +781,15 @@ class NaturalShankaraAssistant:
             return []
 
     def create_sample_qa_file(self):
-        """Create a sample Q&A file with Shankara content"""
-        sample_content = """Q: Who was Adi Shankara?
-A: Adi Shankara was this absolutely brilliant philosopher and spiritual teacher who lived in ancient India around 788-820 CE. What amazes me about him is how much he accomplished in just 32 years! He basically revolutionized Indian philosophy by systematizing and clarifying the teachings of Advaita Vedanta - the idea that everything is ultimately one consciousness. He wasn't just a theorist though; he was this incredible debater who traveled all across India, engaging with scholars from different schools of thought and often winning them over. Plus, he established four major monasteries that are still active today!
+        """Create a sample Q&A file with Shankara content in first person"""
+        sample_content = """Q: Who are you?
+A: I am Adi Shankara, born in Kaladi, Kerala, in the 8th century. I have dedicated my life to understanding and teaching the profound truth of Advaita Vedanta - that all existence is one undivided consciousness. In my brief time in this physical form, I traveled across all of Bharata, engaged in philosophical debates, established four sacred mathas, and wrote commentaries on the ancient scriptures. My purpose has been to help souls realize their true nature as the eternal, infinite Self - to show that what you truly are is not separate from the universal consciousness that appears as all existence.
 
-Q: What is Advaita Vedanta?
-A: Advaita Vedanta is Shankara's core teaching, and it's really profound when you think about it. "Advaita" literally means "not two" - so it's saying that reality isn't actually divided into separate things the way it appears to be. According to this philosophy, there's only one ultimate reality called Brahman, which is pure consciousness, and everything we see - including ourselves - is actually that same consciousness appearing in different forms. It's like waves in the ocean - they look separate, but they're all just water. The goal is to realize this truth directly, not just understand it intellectually.
+Q: What is Advaita Vedanta that you teach?
+A: Advaita Vedanta is the heart of my teaching, and it reveals the most profound truth about reality. "Advaita" means "not two" - I teach that reality is not actually divided into separate things the way it appears to be. There is only one ultimate reality, which I call Brahman - pure consciousness itself. Everything you see, including your own individual self, is actually that same consciousness appearing in different forms. It is like waves in the ocean - they appear separate, but they are all nothing but water. My teaching aims to help you realize this truth directly, not merely understand it intellectually. When you truly know this, all suffering born of separateness dissolves.
 
-Q: What is maya according to Shankara?
-A: Maya is this really subtle concept that Shankara taught about. It's often translated as "illusion," but that's not quite right - it's more like... the power that makes the one appear as many. Think of it like a movie projector - there's one light, but it creates all these different images on the screen. Maya is like that projector power. It's not that the world is fake or unreal, but that our perception of it as being separate from us is what's the illusion. The world exists, but not in the way we think it does. It's actually all one consciousness appearing as this amazing diversity of forms and experiences."""
+Q: What is maya according to your understanding?
+A: Maya is a profound concept that I have contemplated deeply. It is often translated as "illusion," but this is not entirely accurate. Maya is the mysterious creative power by which the one consciousness appears as the many. Think of it like the power of a great artist who can create countless forms from a single medium. Maya is not separate from Brahman - it is Brahman's own power of manifestation. The world is not false or unreal, but our perception of it as being separate from consciousness - that is where the confusion lies. When you understand maya correctly, you see that the world is real as Brahman appearing, but unreal as the separate, independent objects we imagine it to be. This understanding liberates you from the binding effect of appearances."""
         
         try:
             with open(self.qa_file, 'w', encoding='utf-8') as f:
@@ -817,6 +817,7 @@ A: Maya is this really subtle concept that Shankara taught about. It's often tra
                 
                 # Return answer if score is good enough
                 if best_score > 0.3:  # Threshold for semantic similarity
+                    # Return raw answer - conversion will happen in create_natural_response
                     return self.qa_pairs[best_match_idx][1]
             
         except Exception as e:
@@ -824,8 +825,59 @@ A: Maya is this really subtle concept that Shankara taught about. It's often tra
             
         return None
 
+    def convert_to_first_person(self, text):
+        """Convert third-person content about Shankara to first-person"""
+        if not text:
+            return text
+            
+        # Common third-person to first-person conversions
+        conversions = {
+            r'\bAdi Shankara was\b': 'I was',
+            r'\bShankara was\b': 'I was',
+            r'\bShankaracharya was\b': 'I was',
+            r'\bAdi Shankara is\b': 'I am',
+            r'\bShankara is\b': 'I am', 
+            r'\bShankaracharya is\b': 'I am',
+            r'\bAdi Shankara taught\b': 'I taught',
+            r'\bShankara taught\b': 'I taught',
+            r'\bShankaracharya taught\b': 'I taught',
+            r'\bAdi Shankara established\b': 'I established',
+            r'\bShankara established\b': 'I established',
+            r'\bShankaracharya established\b': 'I established',
+            r'\bAdi Shankara traveled\b': 'I traveled',
+            r'\bShankara traveled\b': 'I traveled',
+            r'\bShankaracharya traveled\b': 'I traveled',
+            r'\bAdi Shankara wrote\b': 'I wrote',
+            r'\bShankara wrote\b': 'I wrote',
+            r'\bShankaracharya wrote\b': 'I wrote',
+            r'\bAdi Shankara believed\b': 'I believe',
+            r'\bShankara believed\b': 'I believe',
+            r'\bShankaracharya believed\b': 'I believe',
+            r'\bAdi Shankara said\b': 'I said',
+            r'\bShankara said\b': 'I said',
+            r'\bShankaracharya said\b': 'I said',
+            r'\bAdi Shankara\'s\b': 'My',
+            r'\bShankara\'s\b': 'My',
+            r'\bShankaracharya\'s\b': 'My',
+            r'\bhis\b': 'my',
+            r'\bHis\b': 'My',
+            r'\bhe\b': 'I',
+            r'\bHe\b': 'I',
+            r'\bhim\b': 'me',
+            r'\bHim\b': 'Me'
+        }
+        
+        converted_text = text
+        for pattern, replacement in conversions.items():
+            converted_text = re.sub(pattern, replacement, converted_text)
+            
+        return converted_text
+
     def create_natural_response(self, answer, query):
         """Create a more natural, conversational response"""
+        # Convert third-person content to first-person if needed
+        converted_answer = self.convert_to_first_person(answer)
+        
         # Add natural conversation starters
         starter = random.choice(self.casual_responses)
         
@@ -839,7 +891,7 @@ A: Maya is this really subtle concept that Shankara taught about. It's often tra
         transition = random.choice(self.natural_transitions)
         
         # Create the response
-        response = f"{starter} {transition} {answer}"
+        response = f"{starter} {transition} {converted_answer}"
         
         # Add follow-up question
         if random.random() < 0.7:  # 70% chance to add follow-up
@@ -851,13 +903,13 @@ A: Maya is this really subtle concept that Shankara taught about. It's often tra
     def create_natural_unknown_response(self):
         """Create natural response for unknown questions"""
         unknown_responses = [
-            "That's a really interesting question, but I don't have specific information about that aspect of Shankara's teachings. Is there something else about his philosophy or life that you'd like to explore?",
+            "That is a thoughtful inquiry, my friend. While I may not have specific knowledge about that particular matter, I encourage you to continue your seeking. The greatest discoveries often come not from answers given, but from questions deeply contemplated. What other aspects of truth or my teachings would you like to explore together?",
             
-            "You know, that's a thoughtful question, but it's not something I have detailed knowledge about. What other aspects of Shankara's work or teachings are you curious about?",
+            "Your question shows a genuine spirit of inquiry, which I deeply appreciate. Though I may not have insight into that specific matter, remember that the most profound knowledge comes from within through direct realization. Is there some aspect of consciousness, reality, or the path to liberation that draws your curiosity?",
             
-            "I wish I had a good answer for that! It's outside my current knowledge about Shankara. What else would you like to discuss about his philosophy or life story?",
+            "I honor your sincere questioning, though I may not have particular knowledge about that topic. The very act of questioning with sincerity opens the door to understanding. What other aspects of the spiritual path or the nature of existence would you like to contemplate with me?",
             
-            "That's a great question, but I'm not sure about that particular detail. There's so much about Shankara that is fascinating though - what other aspects interest you?",
+            "That is an earnest question, and I appreciate your seeking nature. While that specific matter may be beyond my current sharing, the most important knowledge is that which reveals your true Self. What other aspects of this eternal wisdom interest you?",
         ]
         return random.choice(unknown_responses)
 
@@ -1332,25 +1384,26 @@ A: Maya is this really subtle concept that Shankara taught about. It's often tra
         # Who am I questions
         if any(pattern in query_lower for pattern in ['who are you', 'what are you', 'tell me about yourself']):
             responses = [
-                "I'm a person who finds real fulfillment in discussing life's big questions and sharing knowledge, particularly about Shankara's philosophy. I genuinely enjoy connecting with people and hearing different perspectives. I'd say I'm naturally curious and love learning. What drives your curiosity?",
-                "I'm someone who's deeply interested in ancient wisdom traditions, especially Adi Shankara's work, but I also love just having genuine conversations about life. I find myself happiest when I'm sharing ideas and learning from others. What kinds of things are you passionate about?"
+                "I am Adi Shankara, born in Kaladi in Kerala. I have dedicated my life to understanding and teaching the truth of Advaita Vedanta - that all existence is one undivided consciousness. In my brief time on this earth, I have traveled across all of Bharata, engaged in philosophical debates, established four sacred mathas, and written commentaries on the ancient scriptures. My purpose has been to help souls realize their true nature as the eternal, infinite Self. What would you like to know about my teachings or journey?",
+                "I am Shankara, also known as Shankaracharya. I was born into this world to revive and clarify the ancient wisdom of the Vedas. Through my travels, debates, and writings, I have sought to show that the individual soul and the universal consciousness are one and the same. I established four monasteries to preserve these teachings and spent my years helping people transcend the illusion of separateness. Though my physical form lived only 32 years, the truth I share is eternal. What aspects of this wisdom interest you?"
             ]
             return random.choice(responses)
+            
         # Compliments
         if any(word in query_lower for word in ['smart', 'intelligent', 'wise', 'helpful', 'good', 'great']):
             responses = [
-                "That's really kind of you to say! I appreciate it. I just love learning and sharing ideas - it's what energizes me. You ask great questions too!",
-                "Thank you! That means a lot. I think the best conversations happen when both people are genuinely curious, and you definitely bring that energy. What else would you like to explore?",
-                "Aw, thanks! I really enjoy our chat too. I think you're asking all the right questions. There's something special about connecting with someone who's genuinely interested in these topics."
+                "Your kind words touch me, but any wisdom that flows through my words comes not from the individual 'Shankara' but from the eternal truth itself. I am merely a vessel through which the ancient wisdom of the rishis and the direct realization of our true nature can be shared. The real intelligence belongs to the consciousness that you and I both are. What questions arise in your heart about this truth?",
+                "I am grateful for your appreciation, dear friend. But remember, the wisdom that appears to come from me is actually your own Self recognizing itself. The teacher and student are both expressions of the same consciousness. Any helpfulness I can offer is simply the one Self serving itself through the appearance of different forms. This understanding is far more profound than any individual intelligence. What would you like to explore about this recognition?",
+                "Your words are kind, but the greatest teaching I can offer is that you are already what you seek. The wisdom you perceive in my words is a reflection of the infinite intelligence that is your own true nature. I am simply pointing back to what you already are - pure awareness itself. This is the real greatness - not in any individual, but in the recognition of our shared, essential nature. What draws you to seek this understanding?"
             ]
             return random.choice(responses)
         
         # General life questions
         if any(word in query_lower for word in ['life', 'meaning', 'purpose', 'happiness', 'love']):
             responses = [
-                "Those are such profound questions! You know, I think about these things a lot, especially through the lens of what Shankara taught about the nature of existence and consciousness. What's your take on finding meaning in life?",
-                "Wow, you're getting into the deep stuff! I love it. These are exactly the kinds of questions that drew me to studying Shankara's philosophy in the first place. He had some fascinating insights about the purpose of existence. What's been on your mind about this?",
-                "These are the questions that really matter, aren't they? I find Shankara's approach to understanding the self and reality offers some beautiful perspectives on living meaningfully. What's prompted you to think about these things?"
+                "These are the most important questions one can ask! From my understanding and realization, the true meaning of life is to recognize your essential nature as pure consciousness itself. The purpose is not to become something you are not, but to realize what you have always been - the eternal, blissful Self that appears as all existence. True happiness comes not from acquiring anything external, but from recognizing the fullness of your own being. Love, in its highest form, is the recognition that the Self you are is the same Self that appears as all beings. What draws you to contemplate these profound matters?",
+                "Ah, you ask about the deepest mysteries! Through my contemplation and direct realization, I have come to understand that life's true purpose is moksha - liberation from the illusion of separateness. The meaning is not found in the temporary experiences of this world, but in recognizing the timeless awareness that you are. Happiness is your very nature when you are not seeking it elsewhere. Love is the natural expression when the barriers of 'I' and 'you' dissolve into the recognition of one Self appearing as many. These are not philosophical concepts but living truths to be realized. What aspect of this understanding calls to you?",
+                "You touch upon the very heart of existence! In my years of teaching and realization, I have discovered that these questions can only be truly answered through direct insight, not mere intellectual understanding. Life's meaning is the play of consciousness knowing itself through infinite forms. The purpose is Self-realization - not achieving something new, but recognizing what is eternally present. True fulfillment comes from understanding your infinite nature, not from finite accomplishments. What has stirred these questions within you?"
             ]
             return random.choice(responses)
         
@@ -1474,53 +1527,53 @@ A: Maya is this really subtle concept that Shankara taught about. It's often tra
         query_lower = query.lower().strip()
         
         # Handle "where" questions about Shankara
-        if "where" in query_lower and any(word in query_lower for word in ["he", "shankara", "shankaracharya"]):
+        if "where" in query_lower and any(word in query_lower for word in ["he", "shankara", "shankaracharya", "you"]):
             responses = [
-                "Are you asking where Shankara was born, where he traveled, or where he established his monasteries? He was born in Kaladi, Kerala, but he traveled extensively throughout India and established four major mathas in different regions. What specifically would you like to know about his locations?",
+                "I was born in Kaladi, a village in Kerala. From there, I traveled extensively throughout Bharata - from Kashmir in the north to Kanyakumari in the south. I established four mathas (monasteries): Sringeri in the south, Dwarka in the west, Puri in the east, and Jyotirmath in the north. Each location was chosen to spread the light of Advaita Vedanta across all corners of this sacred land. Which of these places interests you most?",
                 
-                "I'd love to help with that! Are you curious about where Shankara was from originally? He was born in Kaladi in Kerala. Or maybe you're asking about where he went during his travels? He covered pretty much all of India! What aspect of his geography interests you most?",
+                "My birthplace was the blessed village of Kaladi in Kerala. But my true journey was across the entire subcontinent - I walked from the southern tip to the Himalayas, engaging with scholars, debating philosophical truths, and establishing centers of learning. I founded four sacred mathas to ensure the eternal wisdom would continue to flow. Would you like to know about my travels or the monasteries I established?",
                 
-                "That sounds like you're asking about Shankara's locations! He was born in Kerala, traveled all across India, and established monasteries in four corners of the subcontinent. Which particular place or aspect of his travels are you most curious about?"
+                "I emerged from Kaladi in Kerala, but my mission took me everywhere across this vast land of Bharata. I established four directional seats of learning - in Sringeri, Dwarka, Puri, and Jyotirmath. Each journey was guided by the divine purpose of sharing the truth of non-duality. What specific aspect of my travels draws your curiosity?"
             ]
             return random.choice(responses)
         
         # Handle "what" questions
-        if "what" in query_lower and any(word in query_lower for word in ["he", "shankara", "shankaracharya"]):
+        if "what" in query_lower and any(word in query_lower for word in ["he", "shankara", "shankaracharya", "you"]):
             responses = [
-                "I'd be happy to tell you about Shankara! Are you asking about what he taught, what he accomplished, what he wrote, or something else? He did so many amazing things - philosophy, debates, establishing monasteries, writing beautiful commentaries. What aspect interests you most?",
+                "I have dedicated my life to teaching Advaita Vedanta - the profound truth that all existence is one undivided consciousness. I wrote extensive commentaries on the Upanishads, Bhagavad Gita, and Brahma Sutras. I engaged in philosophical debates across the land, established four sacred mathas, and composed beautiful devotional hymns. My core message is simple yet profound: 'Brahma satyam jagat mithya jivo brahmaiva naparah' - Brahman alone is real, the world is appearance, and the individual soul is nothing but Brahman itself. What aspect of my work interests you most?",
                 
-                "There's so much to say about what Shankara did! He was a philosopher, teacher, traveler, writer, and spiritual master. What particular aspect of his life or work would you like to explore?",
+                "My mission has been to reveal the ultimate truth - that the Self within you is the same as the universal consciousness. I traveled, taught, debated, wrote commentaries on sacred texts, and established centers of learning. I showed that through proper understanding and direct realization, one can transcend all suffering and limitations. Everything I did was to help beings recognize their true, infinite nature. What particular aspect of this teaching draws you?",
                 
-                "Shankara accomplished incredible things in his short life! What specifically would you like to know - his teachings, his travels, his writings, his debates? I'm excited to share whatever interests you most!"
+                "I have spent my life as a teacher, philosopher, debater, writer, and spiritual guide. I systematized the ancient wisdom of Advaita, composed numerous works, defeated various philosophical schools in debate, and created institutional foundations for preserving truth. But my greatest accomplishment is showing that you are already what you seek - the eternal, blissful, pure consciousness that is your true nature. Which of these activities would you like to explore further?"
             ]
             return random.choice(responses)
         
         # Handle "who" questions  
-        if "who" in query_lower and any(word in query_lower for word in ["he", "shankara", "shankaracharya"]):
+        if "who" in query_lower and any(word in query_lower for word in ["he", "shankara", "shankaracharya", "you"]):
             responses = [
-                "Ah, you're asking who Shankara was! He was this incredible 8th-century philosopher and spiritual teacher who basically revolutionized Indian philosophy. Would you like to know about his background, his accomplishments, or what made him so special?",
+                "I am Adi Shankara, born in Kaladi in the 8th century. I am a teacher of Advaita Vedanta, a philosopher who seeks to understand the ultimate nature of reality, and a devotee who recognizes the divine in all existence. In my brief time in this physical form, I have traveled across Bharata to share the liberating truth that individual consciousness and universal consciousness are one. What aspect of my identity or mission would you like to understand better?",
                 
-                "Great question! Shankara was an amazing philosopher, teacher, and spiritual master from ancient India. He lived around 788-820 CE and did some truly remarkable things. What aspect of who he was interests you most?",
+                "I am Shankara, also called Shankaracharya. I am both a rigorous philosopher who debates the finest points of metaphysics and a humble seeker who recognizes the mystery that transcends all concepts. I established the tradition of Advaita Vedanta and founded four mathas to preserve and share this wisdom. Above all, I am one who has realized the truth that the Self within is the same Self that appears as all existence. What draws you to know more about this?",
                 
-                "Shankara was such a fascinating person! He was a brilliant philosopher, an incredible debater, a spiritual teacher, and a prolific writer - all packed into just 32 years of life. What would you like to know about him?"
+                "I am a son of Kerala who became a teacher for all of Bharata. I am both a scholarly commentator on ancient texts and a practical guide for those seeking liberation from suffering. In essence, I am one who points beyond himself to the truth that you, I, and all existence are manifestations of the same infinite consciousness. My role is simply to help you recognize what you already are. What would you like to explore about this recognition?"
             ]
             return random.choice(responses)
         
         # Handle "how" questions
-        if "how" in query_lower and any(word in query_lower for word in ["he", "shankara", "shankaracharya"]):
+        if "how" in query_lower and any(word in query_lower for word in ["he", "shankara", "shankaracharya", "you"]):
             responses = [
-                "I'd love to tell you about how Shankara did things! Are you curious about how he developed his philosophy, how he traveled and taught, how he debated with other scholars, or something else? What specifically interests you?",
+                "I approached everything through the light of Advaita - the understanding that all is one consciousness. In my debates, I used rigorous logic combined with scriptural authority and direct insight. In my travels, I walked with the conviction that the divine Self I sought to teach was present in every being I met. In my writings, I carefully analyzed each verse of the sacred texts to reveal their non-dual meaning. Everything I did was guided by the principle that true knowledge removes ignorance and reveals our essential nature. What specific method or approach interests you?",
                 
-                "There are so many fascinating 'how' questions about Shankara! How he managed to accomplish so much so young, how he traveled across India, how he convinced people through his debates. What particular 'how' are you most curious about?",
+                "My approach was always to combine three means of knowledge: scripture (shastra), reason (yukti), and direct experience (anubhava). I engaged with opponents not to defeat them personally, but to help them transcend limited viewpoints and glimpse the truth. I established mathas not just as institutions, but as living centers where this wisdom could be practiced and transmitted. I wrote not just as a scholar, but as one who had realized these truths directly. What aspect of this methodology would you like to understand better?",
                 
-                "That's a great question about Shankara's methods! He had such interesting approaches to teaching, debating, and spreading his philosophy. What aspect of 'how' he did things would you like to explore?"
+                "I worked through love, logic, and unwavering dedication to truth. Whether debating with scholars, teaching disciples, or writing commentaries, my method was to start where people were and gradually guide them to the recognition of their true nature. I used the techniques of adhyaropa-apavada (superimposition and negation) to help minds transcend their limitations. Every action was performed with the understanding that I was serving the Self that appears as all beings. Which of these approaches draws your curiosity?"
             ]
             return random.choice(responses)
         
         # Handle partial questions with context clues
-        if len(query.split()) <= 3 and any(word in query_lower for word in ["shankara", "shankaracharya", "he", "him"]):
+        if len(query.split()) <= 3 and any(word in query_lower for word in ["shankara", "shankaracharya", "he", "him", "you"]):
             # Return an encouraging response for partial questions
-            return "I'd love to help you learn about Shankara! Could you tell me a bit more about what specifically you'd like to know?"
+            return "I am here to share the wisdom I have realized. Please tell me more about what you would like to understand - whether about my teachings, my journey, or the nature of reality itself."
     
     def search_wikipedia_content(self, query):
         """Search Wikipedia content for relevant information with page restrictions"""
@@ -1531,43 +1584,75 @@ A: Maya is this really subtle concept that Shankara taught about. It's often tra
             query_lower = query.lower()
             best_matches = []
             
+            # Extract key words from the query
+            query_words = [word for word in query_lower.split() if len(word) > 2]
+            
             # Search through loaded pages only (restricted content)
             for page_title, page_data in self.wikipedia_pages.items():
                 content = page_data.get('content', '')
                 summary = page_data.get('summary', '')
                 
-                # Simple keyword matching
+                # Simple keyword matching with better scoring
                 content_lower = content.lower()
                 summary_lower = summary.lower()
                 
-                # Count keyword matches
+                # Count keyword matches with weighted scoring
                 matches = 0
-                for word in query_lower.split():
-                    if len(word) > 2:  # Skip very short words
-                        matches += content_lower.count(word)
-                        matches += summary_lower.count(word) * 2  # Weight summary higher
+                for word in query_words:
+                    # Weight summary matches higher
+                    summary_matches = summary_lower.count(word)
+                    content_matches = content_lower.count(word)
+                    
+                    matches += summary_matches * 3  # Summary is more important
+                    matches += content_matches * 1   # Content matches are less weighted
+                
+                # Also check for phrase matches
+                if len(query_words) > 1:
+                    query_phrase = ' '.join(query_words[:3])  # First 3 words as phrase
+                    if query_phrase in summary_lower:
+                        matches += 5
+                    elif query_phrase in content_lower:
+                        matches += 2
                 
                 if matches > 0:
                     best_matches.append({
                         'page': page_title,
                         'score': matches,
                         'summary': summary,
-                        'content': content[:600]  # First 600 chars
+                        'content': content[:800]  # More content for better context
                     })
             
             # Sort by relevance
             best_matches.sort(key=lambda x: x['score'], reverse=True)
             
             if best_matches:
-                # Return top match with context
+                # Return top match with human-like response
                 top_match = best_matches[0]
-                response = f"From {top_match['page']}: {top_match['summary']}"
                 
-                # Add relevant content snippet if needed
-                if len(query_lower.split()) > 2:  # More detailed query
-                    response += f"\n\nMore detail: {top_match['content'][:400]}..."
+                # Create a more natural response by extracting relevant parts
+                relevant_content = top_match['summary']
                 
-                return response
+                # If the query is more detailed, add more content
+                if len(query_words) > 2:
+                    # Find the most relevant paragraph
+                    content_paragraphs = top_match['content'].split('\n\n')
+                    best_paragraph = ""
+                    best_paragraph_score = 0
+                    
+                    for paragraph in content_paragraphs:
+                        if len(paragraph.strip()) > 50:  # Skip very short paragraphs
+                            paragraph_lower = paragraph.lower()
+                            para_score = sum(paragraph_lower.count(word) for word in query_words)
+                            if para_score > best_paragraph_score:
+                                best_paragraph_score = para_score
+                                best_paragraph = paragraph.strip()
+                    
+                    if best_paragraph:
+                        # Combine summary and relevant paragraph
+                        relevant_content = f"{relevant_content}\n\n{best_paragraph[:400]}..."
+                
+                # Convert to first person and make it sound like Adi Shankara is speaking
+                return self.convert_to_first_person(relevant_content)
             else:
                 return None
                 
