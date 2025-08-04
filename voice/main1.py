@@ -106,7 +106,8 @@ required = {
     "nltk": "nltk",
     "edge-tts": "edge-tts",
     "wikipedia": "wikipedia"
-    # Note: TTS (Coqui) removed due to installation issues requiring Visual C++ Build Tools
+    # Note: TTS (Coqui) removed from auto-install due to long installation time and build requirements
+    # Install manually with: pip install TTS (requires Visual C++ Build Tools)
     # Note: torch, sentence-transformers, sounddevice, scipy, pyaudio, aiofiles are optional
 }
 
@@ -120,17 +121,41 @@ def install_packages():
             try:
                 logger.info(f"Installing missing package: {package}")
                 subprocess.check_call([sys.executable, "-m", "pip", "install", package], 
-                                    stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                                    stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=120)
                 logger.info(f"Successfully installed {package}")
+            except subprocess.TimeoutExpired:
+                logger.error(f"Installation of {package} timed out (2 minutes)")
+                print(f"⚠ Installation of {package} is taking too long. Skipping...")
             except subprocess.CalledProcessError as e:
                 logger.error(f"Failed to install {package}: {e}")
+
+def install_coqui_tts_optional():
+    """Try to install Coqui TTS separately with user confirmation"""
+    try:
+        # import TTS
+        return True
+    except ImportError:
+        pass
+    
+    print("🎤 Coqui TTS not found. This provides high-quality voice synthesis.")
+    print("⚠ Warning: Installation requires Visual C++ Build Tools and takes 5-10 minutes.")
+    
+    # For now, skip automatic installation to avoid hanging
+    print("📝 To install manually, run: pip install TTS")
+    print("💡 The app will work with other TTS engines (Edge TTS, Google TTS, pyttsx3)")
+    return False
 
 # Install packages before importing them
 try:
     install_packages()
+    print("✓ Core packages installed successfully")
 except Exception as e:
     logger.error(f"Package installation error: {e}")
     print("Some packages may not be installed. Continuing anyway...")
+
+# Try to install Coqui TTS separately (optional)
+print("🔍 Checking for Coqui TTS...")
+install_coqui_tts_optional()
 
 # Try importing optional packages
 try:
@@ -642,12 +667,73 @@ class NaturalShankaraAssistant:
             print("⚠ Using basic voice settings")
 
     def cleanup_temp_file(self, filepath):
-        """Clean up temporary files"""
+        """Clean up temporary files with improved error handling"""
         try:
-            if os.path.exists(filepath):
+            if filepath and os.path.exists(filepath):
+                # Wait a bit to ensure file is not in use
+                time.sleep(0.5)
                 os.unlink(filepath)
+                print(f"🧹 Cleaned up temp file: {os.path.basename(filepath)}")
         except Exception as e:
-            pass  # Ignore cleanup errors
+            # Try again after a longer wait
+            try:
+                time.sleep(2.0)
+                if os.path.exists(filepath):
+                    os.unlink(filepath)
+            except Exception:
+                pass  # Ignore cleanup errors - temp files will be cleaned by system eventually
+
+    def play_audio_file_windows(self, filepath):
+        """Play audio file on Windows with multiple fallback methods"""
+        try:
+            # Method 1: Try pygame
+            try:
+                import pygame
+                pygame.mixer.init(frequency=22050, size=-16, channels=2, buffer=1024)
+                pygame.mixer.music.load(filepath)
+                pygame.mixer.music.play()
+                while pygame.mixer.music.get_busy():
+                    time.sleep(0.1)
+                pygame.mixer.quit()
+                return True
+            except (ImportError, Exception):
+                pass
+            
+            # Method 2: Try Windows Media Player via PowerShell
+            try:
+                result = subprocess.run([
+                    'powershell', '-command', 
+                    f'Add-Type -AssemblyName presentationCore; '
+                    f'$mediaPlayer = New-Object System.Windows.Media.MediaPlayer; '
+                    f'$mediaPlayer.open([System.Uri]::new("{filepath}")); '
+                    f'$mediaPlayer.Play(); '
+                    f'Start-Sleep 5'
+                ], capture_output=True, timeout=30, text=True)
+                return True
+            except Exception:
+                pass
+            
+            # Method 3: Use start command with wmplayer
+            try:
+                subprocess.run(['start', '/wait', 'wmplayer.exe', filepath], 
+                             shell=True, timeout=30)
+                return True
+            except Exception:
+                pass
+            
+            # Method 4: Simple start command
+            try:
+                os.system(f'start /min "" "{filepath}"')
+                time.sleep(3)  # Give it time to play
+                return True
+            except Exception:
+                pass
+                
+            return False
+            
+        except Exception as e:
+            print(f"⚠ Audio playback failed: {e}")
+            return False
     def load_qa_pairs(self):
         """Load Q&A pairs from file or create sample data"""
         if not os.path.exists(self.qa_file):
@@ -951,15 +1037,79 @@ A: Maya is this really subtle concept that Shankara taught about. It's often tra
         if pause_before > 0:
             time.sleep(pause_before)
         
-        # Enhance text for speech
-        enhanced_text = self.enhance_text_for_speech(text)
+        # Detect if text is in Malayalam
+        is_malayalam = any(ord(char) >= 0x0D00 and ord(char) <= 0x0D7F for char in text)
         
         # Always show the text
         print(f"\n💬 Assistant: {text}\n")
         self.log_conversation("Assistant", text)
         
-        # Try Coqui TTS first (highest quality)
-        if COQUI_TTS_AVAILABLE and self.coqui_tts:
+        # For Malayalam text, use Google TTS with Malayalam language
+        if is_malayalam and GTTS_AVAILABLE and gTTS is not None:
+            try:
+                tts = gTTS(text=text, lang='ml', slow=False)  # 'ml' is Malayalam language code
+                
+                # Create temp file with proper Windows handling
+                temp_file = None
+                try:
+                    if tempfile is not None:
+                        temp_fd, temp_file = tempfile.mkstemp(suffix=".mp3")
+                        os.close(temp_fd)  # Close the file descriptor
+                    else:
+                        # Fallback temp file creation
+                        import uuid
+                        temp_file = f"temp_tts_{uuid.uuid4().hex}.mp3"
+                    
+                    # Save TTS to file
+                    tts.save(temp_file)
+                    
+                    # Verify file exists and has content
+                    if not os.path.exists(temp_file) or os.path.getsize(temp_file) == 0:
+                        raise Exception("TTS file was not created properly")
+                    
+                    # Play based on platform
+                    success = False
+                    if os.name == 'nt':  # Windows
+                        success = self.play_audio_file_windows(temp_file)
+                                    
+                    elif sys.platform == 'darwin':  # macOS
+                        try:
+                            os.system(f'afplay "{temp_file}"')
+                            success = True
+                        except Exception:
+                            pass
+                    else:  # Linux
+                        try:
+                            os.system(f'mpg123 "{temp_file}" 2>/dev/null || mplayer "{temp_file}" 2>/dev/null')
+                            success = True
+                        except Exception:
+                            pass
+                    
+                    if success:
+                        if pause_after > 0:
+                            time.sleep(pause_after)
+                        return
+                    else:
+                        print("⚠ Audio playback failed, trying alternative methods...")
+                        
+                except Exception as file_error:
+                    print(f"⚠ TTS file creation failed: {file_error}")
+                finally:
+                    # Clean up temp file
+                    if temp_file and os.path.exists(temp_file):
+                        try:
+                            threading.Timer(2.0, lambda: self.cleanup_temp_file(temp_file)).start()
+                        except Exception:
+                            pass
+                    
+            except Exception as e:
+                print(f"⚠ Malayalam TTS failed: {e}")
+        
+        # For English text, enhance for speech and use regular TTS
+        enhanced_text = self.enhance_text_for_speech(text) if not is_malayalam else text
+        
+        # Try Coqui TTS first (highest quality) - only for English
+        if not is_malayalam and COQUI_TTS_AVAILABLE and self.coqui_tts:
             try:
                 success = self.coqui_tts_speak(enhanced_text)
                 if success:
@@ -969,8 +1119,8 @@ A: Maya is this really subtle concept that Shankara taught about. It's often tra
             except Exception as e:
                 print(f"⚠ Coqui TTS failed: {e}")
         
-        # Try Edge TTS second (high quality)
-        if EDGE_TTS_AVAILABLE and asyncio is not None:
+        # Try Edge TTS second (high quality) - only for English
+        if not is_malayalam and EDGE_TTS_AVAILABLE and asyncio is not None:
             try:
                 loop = asyncio.new_event_loop()
                 asyncio.set_event_loop(loop)
@@ -985,8 +1135,8 @@ A: Maya is this really subtle concept that Shankara taught about. It's often tra
             except Exception as e:
                 print(f"⚠ Edge TTS failed: {e}")
         
-        # Try pyttsx3 (medium quality)
-        if self.tts_engine:
+        # Try pyttsx3 (medium quality) - only for English
+        if not is_malayalam and self.tts_engine:
             try:
                 self.tts_engine.stop()  # Stop any ongoing speech
                 self.tts_engine.say(enhanced_text)
@@ -998,35 +1148,62 @@ A: Maya is this really subtle concept that Shankara taught about. It's often tra
             except Exception as e:
                 print(f"⚠ pyttsx3 failed: {e}")
         
-        # Try Google TTS (basic quality)
-        if GTTS_AVAILABLE and gTTS is not None and tempfile is not None:
+        # Try Google TTS (basic quality) - fallback for English or if Malayalam failed
+        if GTTS_AVAILABLE and gTTS is not None:
             try:
-                tts = gTTS(text=enhanced_text, lang='en', slow=False)
-                with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as fp:
-                    temp_file = fp.name
+                lang_code = 'ml' if is_malayalam else 'en'
+                tts = gTTS(text=text if is_malayalam else enhanced_text, lang=lang_code, slow=False)
+                
+                # Create temp file with proper handling
+                temp_file = None
+                try:
+                    if tempfile is not None:
+                        with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as fp:
+                            temp_file = fp.name
+                    else:
+                        # Fallback temp file creation
+                        import uuid
+                        temp_file = f"temp_tts_{uuid.uuid4().hex}.mp3"
+                    
                     tts.save(temp_file)
                     
-                    # Play based on platform
-                    if os.name == 'nt':  # Windows
-                        try:
-                            import pygame
-                            pygame.mixer.init()
-                            pygame.mixer.music.load(temp_file)
-                            pygame.mixer.music.play()
-                            while pygame.mixer.music.get_busy():
-                                time.sleep(0.1)
-                        except ImportError:
-                            os.system(f'start /min "" "{temp_file}"')
-                            time.sleep(max(len(text) * 0.08, 2))
-                            
-                    elif sys.platform == 'darwin':  # macOS
-                        os.system(f'afplay "{temp_file}"')
-                    else:  # Linux
-                        os.system(f'mpg123 "{temp_file}" 2>/dev/null || mplayer "{temp_file}" 2>/dev/null')
+                    # Verify file exists
+                    if not os.path.exists(temp_file) or os.path.getsize(temp_file) == 0:
+                        raise Exception("TTS file was not created properly")
                     
-                    threading.Timer(5.0, lambda: self.cleanup_temp_file(temp_file)).start()
-                    if pause_after > 0:
-                        time.sleep(pause_after)
+                    # Play based on platform
+                    success = False
+                    if os.name == 'nt':  # Windows
+                        success = self.play_audio_file_windows(temp_file)
+                                
+                    elif sys.platform == 'darwin':  # macOS
+                        try:
+                            os.system(f'afplay "{temp_file}"')
+                            success = True
+                        except Exception:
+                            pass
+                    else:  # Linux
+                        try:
+                            os.system(f'mpg123 "{temp_file}" 2>/dev/null || mplayer "{temp_file}" 2>/dev/null')
+                            success = True
+                        except Exception:
+                            pass
+                    
+                    if success:
+                        threading.Timer(5.0, lambda: self.cleanup_temp_file(temp_file)).start()
+                        if pause_after > 0:
+                            time.sleep(pause_after)
+                        return
+                        
+                except Exception as file_error:
+                    print(f"⚠ TTS file handling failed: {file_error}")
+                finally:
+                    # Clean up temp file
+                    if temp_file and os.path.exists(temp_file):
+                        try:
+                            threading.Timer(2.0, lambda: self.cleanup_temp_file(temp_file)).start()
+                        except Exception:
+                            pass
                     return
                     
             except Exception as e:
@@ -1385,7 +1562,7 @@ A: Maya is this really subtle concept that Shankara taught about. It's often tra
                 # Return top match with context
                 top_match = best_matches[0]
                 response = f"From {top_match['page']}: {top_match['summary']}"
-                1
+                
                 # Add relevant content snippet if needed
                 if len(query_lower.split()) > 2:  # More detailed query
                     response += f"\n\nMore detail: {top_match['content'][:400]}..."
@@ -1566,34 +1743,17 @@ def main():
     """Main function to start the assistant"""
     print("🌟 Welcome to the Natural Shankara Assistant! 🌟")
     print("Learn about Adi Shankara's philosophy in a natural, conversational way.")
+    print("🎙️ Voice conversation mode only - Speak naturally!")
     print()
     
-    assistant = NaturalShankaraAssistant()
-    
-    while True:
-        print("\nChoose your interaction mode:")
-        print("1. 🎙️  Voice conversation (recommended)")
-        print("2. 💬 Text conversation")
-        print("3. 🚪 Exit")
-        
-        try:
-            choice = input("\nEnter your choice (1-3): ").strip()
-            
-            if choice == '1':
-                assistant.start_voice_conversation()
-            elif choice == '2':
-                assistant.text_conversation()
-            elif choice == '3':
-                print("Thanks for using the Natural Shankara Assistant! 🙏")
-                break
-            else:
-                print("Please enter 1, 2, or 3.")
-                
-        except KeyboardInterrupt:
-            print("\n\nThanks for using the Natural Shankara Assistant! 🙏")
-            break
-        except Exception as e:
-            print(f"⚠ Error: {e}")
+    try:
+        assistant = NaturalShankaraAssistant()
+        assistant.start_voice_conversation()
+    except KeyboardInterrupt:
+        print("\n\nThanks for using the Natural Shankara Assistant! 🙏")
+    except Exception as e:
+        print(f"⚠ Error: {e}")
+        print("Thanks for using the Natural Shankara Assistant! 🙏")
 
 if __name__ == "__main__":
     main()

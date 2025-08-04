@@ -45,3 +45,18 @@
 [2025-08-02 01:06:38] Assistant: I'm here whenever you're ready to continue...
 [2025-08-02 01:06:49] Assistant: I'm here whenever you're ready to continue... or if you just want to say hi!
 [2025-08-02 01:07:04] You: more about the college
+[2025-08-04 13:24:54] Assistant: Hey there! I'm really into discussing the fascinating aspects of Adi Shankara's life and philosophy. What would you like to know about?
+[2025-08-04 13:25:13] You: where were you born explain it in Malayalam
+[2025-08-04 13:25:14] Assistant: നമസ്കാരം! ആദി ശങ്കരാചാര്യരുടെ തത്ത്വചിന്തയെക്കുറിച്ച് സംസാരിക്കാൻ ഞാൻ ആഗ്രഹിക്കുന്നു. അദ്വൈത വേദാന്തത്തെക്കുറിച്ച് എന്തറിയാൻ ആഗ്രഹിക്കുന്നു?
+[2025-08-04 13:25:20] Assistant: Alright! This was really fun. Thanks for being such great company. Take care!
+[2025-08-04 13:34:28] Assistant: Hi there! I find Adi Shankara's story absolutely captivating - his teachings, his travels, everything! What draws you to learn about him?
+[2025-08-04 13:34:57] You: Hindu philosophy
+[2025-08-04 13:34:57] Assistant: Hey there! Nice to meet you! I'm really excited to chat about Adi Shankara or just talk in general. How's your day going?
+[2025-08-04 13:35:16] You: say about Hindu philosophy
+[2025-08-04 13:35:17] Assistant: Hey there! Nice to meet you! I'm really excited to chat about Adi Shankara or just talk in general. How's your day going?
+[2025-08-04 13:35:35] You: say about Hindu philosophy
+[2025-08-04 13:35:36] Assistant: Hey! Welcome! I'm here and ready to talk about anything - Shankara's philosophy, life questions, or just casual chat. What brings you here today?
+[2025-08-04 13:35:55] Assistant: Take your time - I'm just enjoying our conversation.
+[2025-08-04 13:36:03] You: who was Adi Shankara
+[2025-08-04 13:36:04] Assistant: Ah, you're asking who Shankara was! He was this incredible 8th-century philosopher and spiritual teacher who basically revolutionized Indian philosophy. Would you like to know about his background, his accomplishments, or what made him so special?
+[2025-08-04 13:36:26] You: I would like to
