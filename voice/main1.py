@@ -247,10 +247,10 @@ try:
 except ImportError:
     WIKIPEDIA_AVAILABLE = False
 
-# Try to import Coqui TTS
+# Try to import Coqui TTS - DISABLED BY USER REQUEST
 try:
     from TTS.api import TTS as CoquiTTS  # type: ignore
-    COQUI_TTS_AVAILABLE = True and COQUI_TTS_IMPORT_SUCCESS
+    COQUI_TTS_AVAILABLE = False  # Disabled - user wants other TTS models only
 except ImportError:
     COQUI_TTS_AVAILABLE = False
 
@@ -263,6 +263,7 @@ class NaturalShankaraAssistant:
         self.conversation_started = False
         self.user_mood = "neutral"  # Track user's mood
         self.conversation_style = "casual"  # casual, formal, friendly
+        self.malayalam_mode = False  # Track if user wants to continue in Malayalam
         
         # Natural conversation starters - speaking as Adi Shankara
         self.conversation_starters = [
@@ -271,6 +272,14 @@ class NaturalShankaraAssistant:
             "Hello! I am Adi Shankara. Through my travels across Bharata and my philosophical inquiries, I have come to understand the true nature of reality. What aspects of truth interest you?",
             "Welcome! I am Shankara, and I have dedicated my life to understanding and teaching the unity of all existence. What would you like to explore about consciousness and reality?",
             "Namaste! I am Adi Shankara. My journey from Kaladi to the four corners of this land has been one of discovering the Self within all. What questions about the nature of being do you carry?"
+        ]
+        
+        # Malayalam conversation starters - for when in Malayalam mode
+        self.malayalam_conversation_starters = [
+            "നമസ്കാരം! ഞാൻ ആദി ശങ്കരാചാര്യൻ ആണ്. അദ്വൈത വേദാന്തത്തിന്റെ സത്യം പങ്കുവെക്കാൻ ഞാൻ ഈ ഭൂമിയിൽ സഞ്ചരിച്ചിട്ടുണ്ട്. എന്റെ ഉപദേശങ്ങളെക്കുറിച്ചോ യാത്രയെക്കുറിച്ചോ എന്തറിയാൻ ആഗ്രഹിക്കുന്നു?",
+            "വണക്കം, എന്റെ സുഹൃത്തേ! ഞാൻ ശങ്കരനാണ്, അസ്തിത്വത്തിന്റെ അഗാധമായ ചോദ്യങ്ങൾ അന്വേഷിക്കാൻ എന്റെ ജീവിതം ചെലവഴിച്ചിട്ടുണ്ട്. ഇന്ന് എന്താണ് നിങ്ങളെ അറിവ് തേടാൻ പ്രേരിപ്പിക്കുന്നത്?",
+            "നമസ്തേ! ഞാൻ ആദി ശങ്കരാചാര്യൻ ആണ്. ഭാരതത്തിലുടനീളമുള്ള എന്റെ യാത്രകളിലൂടെയും തത്ത്വചിന്തയിലൂടെയും യാഥാർത്ഥ്യത്തിന്റെ യഥാർത്ഥ സ്വഭാവം മനസ്സിലാക്കാൻ കഴിഞ്ഞു. സത്യത്തിന്റെ ഏത് വശങ്ങളാണ് നിങ്ങൾക്ക് താൽപ്പര്യമുള്ളത്?",
+            "സ്വാഗതം! ഞാൻ ശങ്കരനാണ്, എല്ലാ അസ്തിത്വത്തിന്റെയും ഏകത്വം മനസ്സിലാക്കാനും പഠിപ്പിക്കാനും എന്റെ ജീവിതം സമർപ്പിച്ചിട്ടുണ്ട്. ചൈതന്യത്തെക്കുറിച്ചും യാഥാർത്ഥ്യത്തെക്കുറിച്ചും എന്താണ് നിങ്ങൾ അന്വേഷിക്കാൻ ആഗ്രഹിക്കുന്നത്?"
         ]
         
         # Natural responses - speaking as Adi Shankara
@@ -374,9 +383,9 @@ class NaturalShankaraAssistant:
         if WIKIPEDIA_AVAILABLE:
             self.setup_wikipedia_rag()
         
-        # Setup Coqui TTS if available
-        if COQUI_TTS_AVAILABLE:
-            self.setup_coqui_tts()
+        # Setup Coqui TTS if available - DISABLED BY USER REQUEST
+        # if COQUI_TTS_AVAILABLE:
+        #     self.setup_coqui_tts()
 
     def initialize_components(self):
         """Initialize all components with proper error handling"""
@@ -464,8 +473,9 @@ class NaturalShankaraAssistant:
         
         # Display voice capabilities
         print("\n🎭 Voice Options Available:")
-        if COQUI_TTS_AVAILABLE:
-            print("  • Coqui TTS voices (Premium Quality)")
+        # Coqui TTS disabled by user request
+        # if COQUI_TTS_AVAILABLE:
+        #     print("  • Coqui TTS voices (Premium Quality)")
         if EDGE_TTS_AVAILABLE:
             print("  • Enhanced Edge TTS voices (High Quality)")
         if PYTTSX3_AVAILABLE:
@@ -574,16 +584,36 @@ class NaturalShankaraAssistant:
             return False
     
     def setup_coqui_tts(self):
-        """Setup Coqui TTS for high-quality voice synthesis"""
+        """Setup Coqui TTS for high-quality voice synthesis with masculine voice"""
         try:
-            print("🎤 Initializing Coqui TTS...")
-            # Use a good English model for philosophical content
+            print("🎤 Initializing Coqui TTS for Adi Shankara's voice...")
             if CoquiTTS is not None:
-                self.coqui_tts = CoquiTTS(model_name="tts_models/en/ljspeech/tacotron2-DDC", 
-                                        progress_bar=False, gpu=False)
-                print("✓ Coqui TTS ready!")
+                # Try different models in order of preference for masculine, mature voice
+                preferred_models = [
+                    "tts_models/en/ljspeech/tacotron2-DDC",     # Default good quality
+                    "tts_models/en/ljspeech/tacotron2-DCA",     # Alternative high quality  
+                    "tts_models/en/ljspeech/glow-tts",          # Another good option
+                    "tts_models/en/ek1/tacotron2",              # Try alternative dataset
+                ]
+                
+                for model_name in preferred_models:
+                    try:
+                        self.coqui_tts = CoquiTTS(
+                            model_name=model_name, 
+                            progress_bar=False, 
+                            gpu=False
+                        )
+                        print(f"✓ Coqui TTS ready with model: {model_name}")
+                        break
+                    except Exception as model_error:
+                        print(f"⚠ Could not load {model_name}: {model_error}")
+                        continue
+                
+                if not self.coqui_tts:
+                    print("⚠ Could not initialize any Coqui TTS model")
             else:
                 self.coqui_tts = None
+                print("⚠ Coqui TTS library not available")
         except Exception as e:
             print(f"⚠ Coqui TTS setup error: {e}")
             self.coqui_tts = None
@@ -621,28 +651,33 @@ class NaturalShankaraAssistant:
                                 name_lower = voice.name.lower()
                                 score = 0
                                 
+                                # Prioritize male voices for Adi Shankara's masculine, authoritative presence
+                                if any(word in name_lower for word in ['male', 'man', 'masculine']) and 'female' not in name_lower:
+                                    score += 15
+                                
                                 # Premium voice preferences (highest priority)
                                 if any(word in name_lower for word in ['neural', 'enhanced', 'premium']):
                                     score += 10
                                 
-                                # High-quality voice names (high priority)
-                                if any(word in name_lower for word in ['david', 'mark', 'ryan', 'guy', 'william']):
-                                    score += 8
+                                # Deep, mature male voice names (perfect for sage-like presence)
+                                if any(word in name_lower for word in ['david', 'mark', 'ryan', 'guy', 'william', 'james', 'thomas']):
+                                    score += 12
                                 
-                                # Good Microsoft voices (medium-high priority)
-                                if any(word in name_lower for word in ['zira', 'hazel', 'eva', 'james']):
-                                    score += 6
+                                # Avoid high-pitched or feminine voices
+                                if any(word in name_lower for word in ['female', 'woman', 'aria', 'zira', 'cortana', 'hazel', 'eva']):
+                                    score -= 10
+                                
+                                # Good Microsoft voices with deep tones (medium-high priority)
+                                if any(word in name_lower for word in ['desktop male', 'server male']):
+                                    score += 8
                                 
                                 # Standard Microsoft voices (medium priority)
                                 if 'microsoft' in name_lower and any(word in name_lower for word in ['english', 'us', 'uk']):
                                     score += 4
                                 
-                                # Prefer male voices for deeper sound (slight preference)
-                                if any(word in name_lower for word in ['male', 'man']) and 'female' not in name_lower:
-                                    score += 2
-                                
-                                if any(word in name_lower for word in ['robotic', 'sam', 'microsoft sam']):
-                                    score -= 5
+                                # Strongly avoid robotic or artificial-sounding voices
+                                if any(word in name_lower for word in ['robotic', 'sam', 'microsoft sam', 'artificial']):
+                                    score -= 15
                                 
                                 voice_scores.append((voice, score, name_lower))
                         
@@ -650,6 +685,7 @@ class NaturalShankaraAssistant:
                         if voice_scores:
                             voice_scores.sort(key=lambda x: x[1], reverse=True)
                             best_voice = voice_scores[0][0]
+                            self.tts_engine.setProperty('voice', best_voice.id)
                             print(f"🎤 Selected voice: {best_voice.name}")
                         else:
                             # Fallback to first available voice
@@ -658,6 +694,25 @@ class NaturalShankaraAssistant:
                                 print(f"🎤 Using default voice: {voices[0].name}")  # type: ignore
                             else:
                                 print("🎤 No suitable voices found, using system default")
+                                
+                        # Configure voice characteristics for Adi Shankara's sage-like presence
+                        try:
+                            # Slower, more contemplative speech rate (normal is 200)
+                            current_rate = self.tts_engine.getProperty('rate')
+                            if current_rate and isinstance(current_rate, (int, float)):
+                                sage_rate = max(120, int(current_rate) - 50)  # Slower, more measured speech
+                            else:
+                                sage_rate = 150  # Default sage-like rate
+                            self.tts_engine.setProperty('rate', sage_rate)
+                            
+                            # Adjust volume for clear, authoritative presence
+                            self.tts_engine.setProperty('volume', 0.9)  # High but not overwhelming
+                            
+                            print(f"🎭 Voice configured for sage-like delivery: Rate={sage_rate}, Volume=0.9")
+                            
+                        except Exception as voice_config_error:
+                            print(f"⚠ Could not adjust voice characteristics: {voice_config_error}")
+                            # Continue anyway with default settings
                 except Exception as e:
                     logger.error(f"Voice selection error: {e}")
                     print("⚠ Using default voice")
@@ -800,7 +855,7 @@ A: Maya is a profound concept that I have contemplated deeply. It is often trans
 
     def semantic_search(self, query):
         """Perform semantic search using sentence transformers"""
-        if not self.embedding_model or not self.embeddings or not self.qa_pairs:
+        if not self.embedding_model or self.embeddings is None or not self.qa_pairs:
             return None
             
         try:
@@ -971,20 +1026,24 @@ A: Maya is a profound concept that I have contemplated deeply. It is often trans
             return input("Let's try typing instead: ").strip()
 
     async def edge_tts_speak_async(self, text):
-        """Async Edge TTS speak function"""
+        """Async Edge TTS speak function with masculine, sage-like voice selection"""
         try:
-            premium_voices = [
-                "en-US-AriaNeural",
-                "en-US-DavisNeural", 
-                "en-US-JasonNeural",
-                "en-US-TonyNeural",
-                "en-GB-RyanNeural",
-                "en-GB-SoniaNeural",
-                "en-AU-WilliamNeural",
-                "en-CA-ClaraNeural",
+            # Carefully selected male voices that sound wise, mature, and authoritative
+            # Perfect for embodying Adi Shankara's voice
+            masculine_sage_voices = [
+                "en-US-DavisNeural",      # Deep, mature male voice - excellent for philosophy
+                "en-US-JasonNeural",      # Warm, authoritative male voice  
+                "en-US-TonyNeural",       # Rich, confident male voice
+                "en-GB-RyanNeural",       # Distinguished British male voice - sounds scholarly
+                "en-AU-WilliamNeural",    # Mature Australian male voice
+                "en-IN-PrabhatNeural",    # Indian male voice - culturally appropriate for Shankara
+                "en-US-GuyNeural",        # Deep, resonant male voice
+                "en-GB-ThomasNeural",     # Authoritative British male voice
             ]
             
-            voice = random.choice(premium_voices)
+            # Prefer Indian English voice for cultural authenticity, fallback to other mature male voices
+            preferred_voice = "en-IN-PrabhatNeural"  # Most culturally appropriate
+            voice = preferred_voice if preferred_voice in masculine_sage_voices else random.choice(masculine_sage_voices)
             temp_file = None
             
             try:
@@ -1160,18 +1219,19 @@ A: Maya is a profound concept that I have contemplated deeply. It is often trans
         # For English text, enhance for speech and use regular TTS
         enhanced_text = self.enhance_text_for_speech(text) if not is_malayalam else text
         
-        # Try Coqui TTS first (highest quality) - only for English
-        if not is_malayalam and COQUI_TTS_AVAILABLE and self.coqui_tts:
-            try:
-                success = self.coqui_tts_speak(enhanced_text)
-                if success:
-                    if pause_after > 0:
-                        time.sleep(pause_after)
-                    return
-            except Exception as e:
-                print(f"⚠ Coqui TTS failed: {e}")
+        # Coqui TTS disabled by user request
+        # Try Coqui TTS first (highest quality) - only for English - DISABLED
+        # if not is_malayalam and COQUI_TTS_AVAILABLE and self.coqui_tts:
+        #     try:
+        #         success = self.coqui_tts_speak(enhanced_text)
+        #         if success:
+        #             if pause_after > 0:
+        #                 time.sleep(pause_after)
+        #             return
+        #     except Exception as e:
+        #         print(f"⚠ Coqui TTS failed: {e}")
         
-        # Try Edge TTS second (high quality) - only for English
+        # Try Edge TTS first (high quality) - only for English
         if not is_malayalam and EDGE_TTS_AVAILABLE and asyncio is not None:
             try:
                 loop = asyncio.new_event_loop()
@@ -1266,21 +1326,53 @@ A: Maya is a profound concept that I have contemplated deeply. It is often trans
             time.sleep(pause_after)
 
     def enhance_text_for_speech(self, text):
-        """Enhance text for more natural speech"""
+        """Enhance text for more natural, sage-like speech delivery"""
         enhanced = text
-        enhanced = enhanced.replace('. ', '... ')
-        enhanced = enhanced.replace('! ', '... ')
-        enhanced = enhanced.replace('? ', '... ')
-        enhanced = enhanced.replace(', ', ', ')
+        
+        # Add contemplative pauses for philosophical gravitas
+        enhanced = enhanced.replace('. ', '... ')  # Longer pauses between sentences
+        enhanced = enhanced.replace('! ', '... ')  # Emphasis with pause
+        enhanced = enhanced.replace('? ', '... ')  # Thoughtful questioning pause
+        enhanced = enhanced.replace(', ', '.. ')   # Brief contemplative pause
+        
+        # Add emphasis pauses before important philosophical concepts
+        enhanced = enhanced.replace(' Advaita', '... Advaita')
+        enhanced = enhanced.replace(' Brahman', '... Brahman')
+        enhanced = enhanced.replace(' consciousness', '... consciousness')
+        enhanced = enhanced.replace(' Self', '... the Self')
+        enhanced = enhanced.replace(' truth', '... truth')
+        enhanced = enhanced.replace(' reality', '... reality')
+        enhanced = enhanced.replace(' liberation', '... liberation')
+        enhanced = enhanced.replace(' enlightenment', '... enlightenment')
+        
+        # Add longer pauses before profound statements
+        enhanced = enhanced.replace('That which you seek', '... That which you seek')
+        enhanced = enhanced.replace('The truth is', '... The truth is')
+        enhanced = enhanced.replace('You must understand', '... You must understand')
+        enhanced = enhanced.replace('My dear friend', '... My dear friend')
+        
+        # Pronunciation guidance for Sanskrit terms
         spiritual_replacements = {
             'moksha': 'mok-sha',
-            'dharma': 'dhar-ma',
+            'dharma': 'dhar-ma', 
             'karma': 'kar-ma',
             'maya': 'ma-ya',
-            'atman': 'at-man'
+            'atman': 'at-man',
+            'brahman': 'brah-man',
+            'vedanta': 've-dan-ta',
+            'upanishad': 'oo-pa-ni-shad',
+            'samadhi': 'sa-ma-dhee',
+            'samsara': 'sam-sa-ra',
+            'nirvana': 'nir-va-na',
+            'mantra': 'man-tra'
         }
+        
+        # Apply pronunciation guidance with case sensitivity
         for original, replacement in spiritual_replacements.items():
+            # Handle both lowercase and title case
             enhanced = enhanced.replace(original, replacement)
+            enhanced = enhanced.replace(original.title(), replacement.title())
+        
         return enhanced
 
     def detect_language_and_translate(self, text):
@@ -1302,28 +1394,237 @@ A: Maya is a profound concept that I have contemplated deeply. It is often trans
         except Exception as e:
             return text, "en"
 
+    def translate_to_language(self, text, target_language):
+        """Translate text to target language with enhanced error handling"""
+        if not self.translator or not text.strip():
+            return text
+            
+        try:
+            # Language code mapping for common requests
+            language_mapping = {
+                'hindi': 'hi',
+                'malayalam': 'ml', 
+                'tamil': 'ta',
+                'telugu': 'te',
+                'kannada': 'kn',
+                'marathi': 'mr',
+                'gujarati': 'gu',
+                'bengali': 'bn',
+                'punjabi': 'pa',
+                'urdu': 'ur',
+                'sanskrit': 'sa',
+                'spanish': 'es',
+                'french': 'fr',
+                'german': 'de',
+                'italian': 'it',
+                'portuguese': 'pt',
+                'russian': 'ru',
+                'chinese': 'zh',
+                'japanese': 'ja',
+                'korean': 'ko',
+                'arabic': 'ar'
+            }
+            
+            # Normalize target language
+            target_lang = target_language.lower().strip()
+            if target_lang in language_mapping:
+                target_lang = language_mapping[target_lang]
+            
+            # Don't translate if already in target language
+            detection = self.translator.detect(text)
+            if detection.lang == target_lang:
+                return text
+                
+            # Perform translation
+            translated = self.translator.translate(text, dest=target_lang)
+            return translated.text
+            
+        except Exception as e:
+            logger.error(f"Translation error: {e}")
+            return f"I apologize, but I had trouble translating that to {target_language}. Here's the original content: {text}"
+
+    def search_live_wikipedia(self, query, max_sentences=5):
+        """Search Wikipedia dynamically for any topic with content restrictions"""
+        if not WIKIPEDIA_AVAILABLE or not wikipedia:
+            return None
+            
+        try:
+            print(f"🔍 Searching Wikipedia for: {query}")
+            
+            # Search for pages
+            search_results = wikipedia.search(query, results=5)
+            if not search_results:
+                return None
+                
+            # Try to get the most relevant page
+            for page_title in search_results:
+                try:
+                    page = wikipedia.page(page_title)
+                    
+                    # Get summary with sentence limit
+                    summary = wikipedia.summary(page_title, sentences=max_sentences)
+                    
+                    # Get some content (first few paragraphs)
+                    content_paragraphs = page.content.split('\n\n')[:3]  # First 3 paragraphs
+                    content = '\n\n'.join(content_paragraphs)
+                    
+                    return {
+                        'title': page_title,
+                        'summary': summary,
+                        'content': content[:1500],  # Limit content length
+                        'url': page.url
+                    }
+                    
+                except wikipedia.exceptions.DisambiguationError as e:
+                    # Try first disambiguation option
+                    try:
+                        page = wikipedia.page(e.options[0])
+                        summary = wikipedia.summary(e.options[0], sentences=max_sentences)
+                        content_paragraphs = page.content.split('\n\n')[:3]
+                        content = '\n\n'.join(content_paragraphs)
+                        
+                        return {
+                            'title': e.options[0],
+                            'summary': summary,
+                            'content': content[:1500],
+                            'url': page.url
+                        }
+                    except Exception:
+                        continue
+                        
+                except wikipedia.exceptions.PageError:
+                    continue
+                except Exception as e:
+                    logger.error(f"Error accessing page {page_title}: {e}")
+                    continue
+                    
+            return None
+            
+        except Exception as e:
+            logger.error(f"Live Wikipedia search error: {e}")
+            return None
+
+    def get_wikipedia_info_in_language(self, topic, target_language="english", detail_level="summary"):
+        """Get Wikipedia information about any topic and translate to desired language"""
+        try:
+            # First search live Wikipedia for the topic
+            wiki_data = self.search_live_wikipedia(topic, max_sentences=3 if detail_level == "summary" else 8)
+            
+            if not wiki_data:
+                return f"I apologize, but I couldn't find reliable information about '{topic}' on Wikipedia at the moment."
+            
+            # Prepare content based on detail level
+            if detail_level.lower() in ["brief", "short"]:
+                content = wiki_data['summary'][:300] + "..."
+            elif detail_level.lower() in ["detailed", "full", "complete"]:
+                content = f"{wiki_data['summary']}\n\n{wiki_data['content']}"
+            else:  # summary (default)
+                content = wiki_data['summary']
+            
+            # Add source information
+            content += f"\n\n[Source: {wiki_data['title']} - Wikipedia]"
+            
+            # Translate if not English
+            if target_language.lower() not in ["english", "en"]:
+                print(f"🌐 Translating to {target_language}...")
+                translated_content = self.translate_to_language(content, target_language)
+                
+                # Create a natural response as Adi Shankara
+                response = f"I have searched the vast repository of knowledge for information about '{topic}' and found this wisdom to share with you in {target_language}:\n\n{translated_content}"
+            else:
+                # Create a natural response as Adi Shankara in English
+                response = f"I have consulted the great repository of knowledge to find information about '{topic}' for you:\n\n{content}"
+            
+            return response
+            
+        except Exception as e:
+            logger.error(f"Wikipedia info retrieval error: {e}")
+            return f"I encountered some difficulty while seeking information about '{topic}'. Please try asking about a different topic or try again later."
+
     def respond_in_malayalam(self, query):
-        """Provide responses in Malayalam when requested"""
+        """Provide responses in Malayalam when requested and handle Malayalam mode"""
         query_lower = query.lower()
         
-        # Check if user is specifically asking for Malayalam
-        if any(word in query_lower for word in ['malayalam', 'malayalam language', 'reply in malayalam']):
+        # Check if user wants to start or continue Malayalam conversation
+        malayalam_triggers = [
+            'malayalam', 'malayalam language', 'reply in malayalam', 'speak in malayalam',
+            'continue in malayalam', 'continue speaking in malayalam', 'speak malayalam',
+            'tell in malayalam', 'explain in malayalam', 'say in malayalam'
+        ]
+        
+        # Check if user is requesting Malayalam mode
+        if any(trigger in query_lower for trigger in malayalam_triggers):
+            self.malayalam_mode = True
             malayalam_responses = [
-                "നമസ്കാരം! ആദി ശങ്കരാചാര്യരുടെ തത്ത്വചിന്തയെക്കുറിച്ച് സംസാരിക്കാൻ ഞാൻ ആഗ്രഹിക്കുന്നു. അദ്വൈത വേദാന്തത്തെക്കുറിച്ച് എന്തറിയാൻ ആഗ്രഹിക്കുന്നു?",
-                "വണക്കം! ശങ്കരാചാര്യരുടെ ഉപദേശങ്ങളെക്കുറിച്ച് സംസാരിക്കാൻ ഞാൻ സന്തോഷിക്കുന്നു. അദ്ദേഹത്തിന്റെ ജീവിതത്തെക്കുറിച്ചോ തത്ത്വചിന്തയെക്കുറിച്ചോ എന്തറിയാൻ ആഗ്രഹിക്കുന്നു?",
-                "നമസ്തേ! കേരളത്തിലെ മഹാൻ ആദി ശങ്കരാചാര്യരെക്കുറിച്ച് സംസാരിക്കാൻ കഴിയുന്നതിൽ സന്തോഷം. അദ്ദേഹത്തിന്റെ അദ്വൈത സിദ്ധാന്തത്തെക്കുറിച്ച് അറിയാൻ ആഗ്രഹിക്കുന്നുണ്ടോ?"
+                "നമസ്കാരം! ഇനി മുതൽ ഞാൻ മലയാളത്തിൽ സംസാരിക്കാം. ആദി ശങ്കരാചാര്യരുടെ തത്ത്വചിന്തയെക്കുറിച്ച് സംസാരിക്കാൻ ഞാൻ ആഗ്രഹിക്കുന്നു. അദ്വൈത വേദാന്തത്തെക്കുറിച്ച് എന്തറിയാൻ ആഗ്രഹിക്കുന്നു?",
+                "വണക്കം! ഇനി മലയാളത്തിൽ സംസാരിക്കാം. ശങ്കരാചാര്യരുടെ ഉപദേശങ്ങളെക്കുറിച്ച് സംസാരിക്കാൻ ഞാൻ സന്തോഷിക്കുന്നു. അദ്ദേഹത്തിന്റെ ജീവിതത്തെക്കുറിച്ചോ തത്ത്വചിന്തയെക്കുറിച്ചോ എന്തറിയാൻ ആഗ്രഹിക്കുന്നു?",
+                "നമസ്തേ! ഇനി മുതൽ മലയാളത്തിൽ സംസാരിക്കാം. കേരളത്തിലെ മഹാൻ ആദി ശങ്കരാചാര്യരെക്കുറിച്ച് സംസാരിക്കാൻ കഴിയുന്നതിൽ സന്തോഷം. അദ്ദേഹത്തിന്റെ അദ്വൈത സിദ്ധാന്തത്തെക്കുറിച്ച് അറിയാൻ ആഗ്രഹിക്കുന്നുണ്ടോ?"
             ]
             return random.choice(malayalam_responses)
         
+        # If already in Malayalam mode, provide Malayalam responses for any query
+        if self.malayalam_mode:
+            return self.get_malayalam_response(query)
+        
+        # Check for users wanting to switch back to English
+        if any(word in query_lower for word in ['english', 'speak english', 'reply in english', 'switch to english']):
+            self.malayalam_mode = False
+            return "Sure! I'll continue our conversation in English. What would you like to know about my teachings or philosophy?"
+        
         # Basic Malayalam greetings
         if any(word in query_lower for word in ['namaskaram', 'vanakkam', 'hello in malayalam']):
+            self.malayalam_mode = True
             return "നമസ്കാരം! എങ്ങനെയുണ്ട്? ആദി ശങ്കരാചാര്യരെക്കുറിച്ച് എന്തറിയാൻ ആഗ്രഹിക്കുന്നു?"
         
         # Basic questions about Shankara in Malayalam context
         if any(word in query_lower for word in ['shankara', 'advaita']) and 'malayalam' in query_lower:
+            self.malayalam_mode = True
             return "ആദി ശങ്കരാചാര്യൻ കേരളത്തിലെ കലടിയിൽ ജനിച്ച മഹാൻ ആണ്. അദ്ദേഹം അദ്വൈത വേദാന്തത്തിന്റെ പ്രധാന ഉപദേഷ്ടാവാണ്. 'അഹം ബ്രഹ്മാസ്മി' - ഞാൻ ബ്രഹ്മമാണ് എന്നതാണ് അദ്ദേഹത്തിന്റെ പ്രധാന ഉപദേശം."
         
         return None
+
+    def get_malayalam_response(self, query):
+        """Generate appropriate Malayalam responses for various queries"""
+        query_lower = query.lower()
+        
+        # Common Malayalam greetings and responses
+        if any(word in query_lower for word in ['hello', 'hi', 'hey', 'namaste', 'good morning', 'good afternoon', 'good evening']):
+            return "നമസ്കാരം! എങ്ങനെയുണ്ട്? എന്തെങ്കിലും ചോദിക്കാൻ ഉണ്ടോ?"
+        
+        # Questions about identity
+        if any(pattern in query_lower for pattern in ['who are you', 'tell me about yourself', 'introduce yourself']):
+            return "ഞാൻ ആദി ശങ്കരാചാര്യൻ ആണ്. കേരളത്തിലെ കലടിയിൽ ജനിച്ച ഞാൻ അദ്വൈത വേദാന്തത്തിന്റെ മഹാനായ ഉപദേഷ്ടാവാണ്. എന്റെ ജീവിതം സത്യാന്വേഷണത്തിനും ആത്മാവിന്റെ യഥാർത്ഥ സ്വരൂപം മനസ്സിലാക്കാൻ മനുഷ്യരെ സഹായിക്കുന്നതിനും വേണ്ടിയാണ് ചെലവഴിച്ചത്."
+        
+        # Questions about Advaita Vedanta
+        if any(word in query_lower for word in ['advaita', 'vedanta', 'philosophy', 'teaching']):
+            return "അദ്വൈത വേദാന്തം എന്റെ പ്രധാന ഉപദേശമാണ്. 'അദ്വൈത' എന്നാൽ 'രണ്ടില്ല' എന്നർത്ഥം. എല്ലാ അസ്തിത്വവും ഒരേ ചൈതന്യമാണ് എന്നാണ് ഞാൻ പഠിപ്പിക്കുന്നത്. നിങ്ങൾ കാണുന്ന എല്ലാം, നിങ്ങളുടെ വ്യക്തിഗത സത്ത ഉൾപ്പെടെ, അതേ ബ്രഹ്മചൈതന്യം വ്യത്യസ്ത രൂപങ്ങളിൽ പ്രത്യക്ഷപ്പെടുന്നതാണ്."
+        
+        # Questions about birth/origin
+        if any(word in query_lower for word in ['where', 'born', 'birth', 'origin']):
+            return "ഞാൻ കേരളത്തിലെ കലടി എന്ന ഗ്രാമത്തിലാണ് ജനിച്ചത്. അവിടെ നിന്ന് ഞാൻ ഭാരതത്തിന്റെ എല്ലാ ഭാഗങ്ങളിലും സഞ്ചരിച്ചു - വടക്ക് കാശ്മീർ മുതൽ തെക്ക് കന്യാകുമാരി വരെ. നാല് മഠങ്ങൾ സ്ഥാപിച്ചു: തെക്ക് ശൃംഗേരി, പടിഞ്ഞാറ് ദ്വാരക, കിഴക്ക് പുരി, വടക്ക് ജ്യോതിർമഠ്."
+        
+        # Questions about Maya
+        if any(word in query_lower for word in ['maya', 'illusion']):
+            return "മായ എന്നത് ഒരു അഗാധമായ സങ്കൽപ്പമാണ്. ഇത് പലപ്പോഴും 'ഭ്രമം' എന്ന് വിവർത്തനം ചെയ്യപ്പെടുന്നു, പക്ഷേ അത് പൂർണ്ണമായും കൃത്യമല്ല. മായ എന്നത് ഒരേ ചൈതന്യം അനേകരൂപങ്ങളിൽ പ്രത്യക്ഷപ്പെടുന്നതിനുള്ള രഹസ്യമയമായ സൃഷ്ടിശക്തിയാണ്."
+        
+        # Questions about truth/reality
+        if any(word in query_lower for word in ['truth', 'reality', 'brahman']):
+            return "സത്യം എന്നത് 'ബ്രഹ്മം സത്യം ജഗത് മിഥ്യാ ജീവോ ബ്രഹ്മൈവ നാപരഃ' എന്ന മഹാവാക്യത്തിൽ സംഗ്രഹിച്ചിരിക്കുന്നു. ബ്രഹ്മം മാത്രമാണ് സത്യം, ലോകം കാഴ്ചയാണ്, ജീവാത്മാവ് ബ്രഹ്മത്തിൽ നിന്ന് വ്യത്യസ്തമല്ല."
+        
+        # Questions about meditation/spiritual practice
+        if any(word in query_lower for word in ['meditation', 'practice', 'spiritual', 'moksha']):
+            return "മോക്ഷം എന്നത് നേടേണ്ടത് അല്ല, മറിച്ച് നിങ്ങളുടെ യഥാർത്ഥ സ്വഭാവം തിരിച്ചറിയേണ്ടതാണ്. ധ്യാനത്തിലൂടെയും ആത്മവിചാരത്തിലൂടെയും കാണുന്നവനും കാണപ്പെടുന്നതും ഒന്നാണെന്ന് മനസ്സിലാക്കാൻ കഴിയും."
+        
+        # General philosophical questions
+        if any(word in query_lower for word in ['life', 'meaning', 'purpose', 'happiness']):
+            return "ജീവിതത്തിന്റെ യഥാർത്ഥ അർത്ഥം നിങ്ങളുടെ അടിസ്ഥാന സ്വഭാവം ശുദ്ധ ചൈതന്യമാണെന്ന് തിരിച്ചറിയുക എന്നതാണ്. സന്തോഷം എന്നത് ബാഹ്യമായി എന്തെങ്കിലും നേടുന്നതിൽ നിന്നല്ല, മറിച്ച് നിങ്ങളുടെ സ്വന്തം അസ്തിത്വത്തിന്റെ പൂർണ്ണത തിരിച്ചറിയുന്നതിൽ നിന്നാണ് വരുന്നത്."
+        
+        # Gratitude and thanks
+        if any(word in query_lower for word in ['thank', 'thanks', 'dhanyavaad']):
+            return "നന്ദി എന്റെ സുഹൃത്തേ! ഇത്തരം ആത്മീയ ചർച്ചകൾ എനിക്ക് വളരെ സന്തോഷം നൽകുന്നു. മറ്റ് എന്തെങ്കിലും അറിയാൻ ആഗ്രഹമുണ്ടോ?"
+        
+        # Default Malayalam response for unrecognized queries
+        return "അത് വളരെ ചിന്താപരമായ ചോദ്യമാണ്, എന്റെ സുഹൃത്തേ. ആ പ്രത്യേക വിഷയത്തെക്കുറിച്ച് എനിക്ക് പ്രത്യേക അറിവ് ഇല്ലായിരിക്കാം, പക്ഷേ നിങ്ങളുടെ അന്വേഷണം തുടരാൻ ഞാൻ പ്രോത്സാഹിപ്പിക്കുന്നു. ചൈതന്യത്തെക്കുറിച്ചോ, യാഥാർത്ഥ്യത്തെക്കുറിച്ചോ, മോക്ഷമാർഗത്തെക്കുറിച്ചോ മറ്റെന്തെങ്കിലും ചോദിക്കാൻ ആഗ്രഹമുണ്ടോ?"
 
     def handle_casual_questions(self, query):
         """Handle everyday questions like greetings, time, date, how are you, etc."""
@@ -1661,17 +1962,22 @@ A: Maya is a profound concept that I have contemplated deeply. It is often trans
             return None
     
     def get_wisdom_response(self, query):
-        """Get response in natural way"""
+        """Get response in natural way with enhanced Wikipedia search and translation"""
         if not query.strip():
             return self.create_natural_unknown_response()
         
         # Detect user mood
         self.detect_user_mood(query)
         
-        # Check for Malayalam language requests first
+        # Check for Malayalam language requests FIRST (before Wikipedia)
         malayalam_response = self.respond_in_malayalam(query)
         if malayalam_response:
             return malayalam_response
+        
+        # Check for Wikipedia search and translation requests
+        wikipedia_response = self.handle_wikipedia_requests(query)
+        if wikipedia_response:
+            return wikipedia_response
         
         # First check for casual questions
         casual_response = self.handle_casual_questions(query)
@@ -1701,14 +2007,155 @@ A: Maya is a profound concept that I have contemplated deeply. It is often trans
         # Return casual unknown response
         return self.create_natural_unknown_response()
 
+    def handle_wikipedia_requests(self, query):
+        """Handle Wikipedia search and translation requests"""
+        query_lower = query.lower().strip()
+        
+        # Detect Wikipedia search requests
+        wikipedia_triggers = [
+            "search wikipedia", "wikipedia search", "look up on wikipedia", "find on wikipedia",
+            "search on wikipedia", "wikipedia info", "wikipedia about", "what does wikipedia say",
+            "wikipedia says", "according to wikipedia", "from wikipedia", "wiki search",
+            "search wiki", "wiki info", "look up", "find information about", "tell me about",
+            "what is", "who is", "where is", "when is", "how is", "explain", "define"
+        ]
+        
+        # Detect translation requests
+        translation_triggers = [
+            "translate to", "in hindi", "in malayalam", "in tamil", "in telugu", "in kannada",
+            "in marathi", "in gujarati", "in bengali", "in punjabi", "in urdu", "in sanskrit",
+            "in spanish", "in french", "in german", "in italian", "in portuguese", "in russian",
+            "in chinese", "in japanese", "in korean", "in arabic", "convert to", "say in"
+        ]
+        
+        # Check for Wikipedia search requests
+        for trigger in wikipedia_triggers:
+            if trigger in query_lower:
+                # Extract the topic to search for
+                topic = self.extract_search_topic(query, trigger)
+                if topic:
+                    # Check if they also want translation
+                    target_language = self.extract_target_language(query)
+                    if target_language:
+                        return self.get_wikipedia_info_in_language(topic, target_language, "summary")
+                    else:
+                        return self.get_wikipedia_info_in_language(topic, "english", "summary")
+        
+        # Check for translation requests of general content
+        for trigger in translation_triggers:
+            if trigger in query_lower:
+                target_language = self.extract_target_language(query)
+                if target_language:
+                    # Extract the content to translate
+                    content = self.extract_content_to_translate(query, trigger)
+                    if content:
+                        translated = self.translate_to_language(content, target_language)
+                        return f"Here is that translated to {target_language}:\n\n{translated}"
+                    else:
+                        return f"I understand you want something in {target_language}. Could you please specify what you'd like me to translate or search for?"
+        
+        return None
+
+    def extract_search_topic(self, query, trigger):
+        """Extract the topic to search for from the query"""
+        query_lower = query.lower()
+        
+        # Find where the trigger ends and extract what comes after
+        trigger_index = query_lower.find(trigger)
+        if trigger_index == -1:
+            return None
+            
+        # Get text after the trigger
+        after_trigger = query[trigger_index + len(trigger):].strip()
+        
+        # Remove common prepositions
+        after_trigger = re.sub(r'^(about|on|for|of|the|a|an)\s+', '', after_trigger, flags=re.IGNORECASE)
+        
+        # Clean up the topic
+        topic = after_trigger.strip('?.,!').strip()
+        
+        # If topic is too short or empty, try other extraction methods
+        if len(topic) < 2:
+            # Try to extract from "what is X" or "who is X" patterns
+            patterns = [
+                r'what\s+is\s+(.+?)(?:\?|$)',
+                r'who\s+is\s+(.+?)(?:\?|$)', 
+                r'where\s+is\s+(.+?)(?:\?|$)',
+                r'when\s+is\s+(.+?)(?:\?|$)',
+                r'tell\s+me\s+about\s+(.+?)(?:\?|$)',
+                r'explain\s+(.+?)(?:\?|$)',
+                r'define\s+(.+?)(?:\?|$)'
+            ]
+            
+            for pattern in patterns:
+                match = re.search(pattern, query_lower)
+                if match:
+                    topic = match.group(1).strip()
+                    break
+        
+        return topic if len(topic) > 1 else None
+
+    def extract_target_language(self, query):
+        """Extract target language from the query"""
+        query_lower = query.lower()
+        
+        # Language patterns
+        language_patterns = {
+            r'\bin\s+(hindi|हिंदी)\b': 'hindi',
+            r'\bin\s+(malayalam|മലയാളം)\b': 'malayalam',
+            r'\bin\s+(tamil|தமிழ்)\b': 'tamil',
+            r'\bin\s+(telugu|తెలుగు)\b': 'telugu',
+            r'\bin\s+(kannada|ಕನ್ನಡ)\b': 'kannada',
+            r'\bin\s+(marathi|मराठी)\b': 'marathi',
+            r'\bin\s+(gujarati|ગુજરાતી)\b': 'gujarati',
+            r'\bin\s+(bengali|বাংলা)\b': 'bengali',
+            r'\bin\s+(punjabi|ਪੰਜਾਬੀ)\b': 'punjabi',
+            r'\bin\s+(urdu|اردو)\b': 'urdu',
+            r'\bin\s+(sanskrit|संस्कृत)\b': 'sanskrit',
+            r'\bin\s+(spanish|español)\b': 'spanish',
+            r'\bin\s+(french|français)\b': 'french',
+            r'\bin\s+(german|deutsch)\b': 'german',
+            r'\bin\s+(italian|italiano)\b': 'italian',
+            r'\bin\s+(portuguese|português)\b': 'portuguese',
+            r'\bin\s+(russian|русский)\b': 'russian',
+            r'\bin\s+(chinese|中文)\b': 'chinese',
+            r'\bin\s+(japanese|日本語)\b': 'japanese',
+            r'\bin\s+(korean|한국어)\b': 'korean',
+            r'\bin\s+(arabic|العربية)\b': 'arabic'
+        }
+        
+        for pattern, language in language_patterns.items():
+            if re.search(pattern, query_lower):
+                return language
+                
+        return None
+
+    def extract_content_to_translate(self, query, trigger):
+        """Extract content that user wants translated"""
+        query_lower = query.lower()
+        
+        # Find what comes before the translation trigger
+        trigger_index = query_lower.find(trigger)
+        if trigger_index > 0:
+            content = query[:trigger_index].strip()
+            # Remove common starting words
+            content = re.sub(r'^(translate|say|convert|tell|show)\s+', '', content, flags=re.IGNORECASE)
+            content = re.sub(r'^(me|this|that)\s+', '', content, flags=re.IGNORECASE)
+            return content.strip('"\'') if len(content) > 2 else None
+            
+        return None
+
     def start_voice_conversation(self):
         """Start a voice conversation with natural flow"""
         print("🎙️ Starting voice conversation mode...")
         print("Speak naturally, I'll understand! Say 'goodbye' or 'thanks' to end.")
         print("-" * 60)
         
-        # Natural greeting
-        greeting = random.choice(self.conversation_starters)
+        # Natural greeting - choose language based on Malayalam mode
+        if self.malayalam_mode:
+            greeting = random.choice(self.malayalam_conversation_starters)
+        else:
+            greeting = random.choice(self.conversation_starters)
         self.speak_with_enhanced_quality(greeting, pause_before=1.0, pause_after=1.5)
         
         quiet_moments = 0
@@ -1728,12 +2175,20 @@ A: Maya is a profound concept that I have contemplated deeply. It is often trans
                     # Check if they want to end the chat
                     ending_words = ['bye', 'goodbye', 'thanks', 'thank you', 'gotta go', 'see you', 'talk later', 'that\'s all', 'quit', 'exit', 'stop']
                     if any(word in what_you_said.lower() for word in ending_words):
-                        goodbye_messages = [
-                            "Hey, this was such a great conversation! Thanks for being so engaging. I really enjoyed chatting with you. Take care!",
-                            "This was wonderful! I love meeting people who are curious about these topics. Thanks for such a thoughtful discussion. See you later!",
-                            "What a pleasure talking with you! I hope some of this was interesting or helpful. Thanks for being such great company!",
-                            "Really enjoyed our chat! You asked some fantastic questions. Thanks for taking the time to explore these ideas with me!"
-                        ]
+                        if self.malayalam_mode:
+                            goodbye_messages = [
+                                "ഈ സംഭാഷണം വളരെ മനോഹരമായിരുന്നു! നിങ്ങളുടെ താൽപ്പര്യത്തിന് നന്ദി. നിങ്ങളോട് സംസാരിക്കാൻ കഴിഞ്ഞതിൽ ഞാൻ സന്തോഷിക്കുന്നു. ശുഭദിനം!",
+                                "അത്ഭുതകരമായിരുന്നു! ഇത്തരം വിഷയങ്ങളിൽ കൗതുകമുള്ള ആളുകളെ കാണാൻ എനിക്ക് വളരെ സന്തോഷമാണ്. ഇത്രയും ചിന്താപരമായ ചർച്ചയ്ക്ക് നന്ദി!",
+                                "നിങ്ങളോട് സംസാരിക്കുന്നത് എത്ര സന്തോഷകരമായിരുന്നു! ഇതിൽ ചിലതെങ്കിലും രസകരമോ ഉപകാരപ്രദമോ ആയിരുന്നുവെന്ന് പ്രതീക്ഷിക്കുന്നു. മികച്ച കൂട്ടുകെട്ടിന് നന്ദി!",
+                                "ഞങ്ങളുടെ സംഭാഷണം വളരെ ആസ്വദിച്ചു! നിങ്ങൾ ചോദിച്ച അത്ഭുതകരമായ ചോദ്യങ്ങൾക്ക് നന്ദി. ഈ ആശയങ്ങൾ പര്യവേക്ഷണം ചെയ്യാൻ സമയം ചെലവഴിച്ചതിന് നന്ദി!"
+                            ]
+                        else:
+                            goodbye_messages = [
+                                "Hey, this was such a great conversation! Thanks for being so engaging. I really enjoyed chatting with you. Take care!",
+                                "This was wonderful! I love meeting people who are curious about these topics. Thanks for such a thoughtful discussion. See you later!",
+                                "What a pleasure talking with you! I hope some of this was interesting or helpful. Thanks for being such great company!",
+                                "Really enjoyed our chat! You asked some fantastic questions. Thanks for taking the time to explore these ideas with me!"
+                            ]
                         self.speak_with_enhanced_quality(random.choice(goodbye_messages), pause_before=0.5)
                         break
                     
@@ -1786,8 +2241,11 @@ A: Maya is a profound concept that I have contemplated deeply. It is often trans
         print("Type 'quit', 'exit', or 'bye' to end the conversation")
         print("-" * 50)
         
-        # Natural greeting  
-        greeting = random.choice(self.conversation_starters)
+        # Natural greeting - choose language based on Malayalam mode
+        if self.malayalam_mode:
+            greeting = random.choice(self.malayalam_conversation_starters)
+        else:
+            greeting = random.choice(self.conversation_starters)
         print(f"\n💬 Assistant: {greeting}\n")
         self.log_conversation("Assistant", greeting)
         
@@ -1803,11 +2261,18 @@ A: Maya is a profound concept that I have contemplated deeply. It is often trans
                 # Check if they want to end the chat
                 ending_words = ['quit', 'exit', 'bye', 'goodbye', 'thanks', 'thank you']
                 if any(word in user_input.lower() for word in ending_words):
-                    goodbye_messages = [
-                        "Thanks for such a wonderful conversation! I really enjoyed our chat. Take care!",
-                        "This was really great! Thanks for all the thoughtful questions. Hope to chat again soon!",
-                        "What a pleasure talking with you! Thanks for being such great company. See you later!"
-                    ]
+                    if self.malayalam_mode:
+                        goodbye_messages = [
+                            "ഈ അത്ഭുതകരമായ സംഭാഷണത്തിന് നന്ദി! ഞങ്ങളുടെ ചാറ്റ് ഞാൻ ശരിക്കും ആസ്വദിച്ചു. ശുഭദിനം!",
+                            "ഇത് ശരിക്കും മികച്ചതായിരുന്നു! എല്ലാ ചിന്താപരമായ ചോദ്യങ്ങൾക്കും നന്ദി. വീണ്ടും ചാറ്റ് ചെയ്യാൻ പ്രതീക്ഷിക്കുന്നു!",
+                            "നിങ്ങളോട് സംസാരിക്കുന്നത് എത്ര സന്തോഷകരമായിരുന്നു! ഇത്ര നല്ല കൂട്ടുകെട്ടിന് നന്ദി. വീണ്ടും കാണാം!"
+                        ]
+                    else:
+                        goodbye_messages = [
+                            "Thanks for such a wonderful conversation! I really enjoyed our chat. Take care!",
+                            "This was really great! Thanks for all the thoughtful questions. Hope to chat again soon!",
+                            "What a pleasure talking with you! Thanks for being such great company. See you later!"
+                        ]
                     goodbye = random.choice(goodbye_messages)
                     print(f"\n💬 Assistant: {goodbye}\n")
                     self.log_conversation("Assistant", goodbye)
