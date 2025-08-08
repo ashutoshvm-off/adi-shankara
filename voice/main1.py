@@ -65,7 +65,7 @@ except ImportError:
     gTTS = None  # type: ignore
 
 try:
-    import wikipedia  # type: ignore
+    import wikipedia 
 except ImportError:
     wikipedia = None  # type: ignore
 
@@ -111,23 +111,97 @@ required = {
     # Note: torch, sentence-transformers, sounddevice, scipy, pyaudio, aiofiles are optional
 }
 
-def install_packages():
-    """Install required packages with better error handling"""
+def check_package_status():
+    """Quick check of package availability without installation"""
+    print("🔍 Quick Package Status Check:")
+    available = []
+    missing = []
+    
     for module, package in required.items():
         try:
             __import__(module)
-            logger.info(f"Package {module} already installed")
+            available.append(module)
         except ImportError:
+            missing.append((module, package))
+    
+    total = len(required)
+    print(f"  ✅ Available: {len(available)}/{total} ({', '.join(available) if available else 'None'})")
+    if missing:
+        print(f"  ❌ Missing: {len(missing)}/{total} ({', '.join([m[0] for m in missing])})")
+    else:
+        print("  🎉 All packages are available!")
+    print()
+    return len(missing) == 0
+
+def install_packages():
+    """Install required packages with better error handling and fast checking"""
+    print("📦 Checking required packages...")
+    installed_count = 0
+    missing_count = 0
+    failed_count = 0
+    
+    # Fast check first - just try importing without detailed diagnostics
+    missing_packages = []
+    
+    for module, package in required.items():
+        try:
+            __import__(module)
+            print(f"✓ {module} - Already installed")
+            logger.info(f"Package {module} already installed")
+            installed_count += 1
+        except ImportError:
+            print(f"⚠ {module} - Missing")
+            missing_packages.append((module, package))
+    
+    # Show status after quick check
+    total_packages = len(required)
+    print(f"\n📊 Quick Package Status:")
+    print(f"  ✓ Available: {installed_count}/{total_packages}")
+    if missing_packages:
+        print(f"  ⚠ Missing: {len(missing_packages)}/{total_packages}")
+        
+        # Ask user if they want to install missing packages
+        print(f"\n🔧 Found {len(missing_packages)} missing packages:")
+        for module, package in missing_packages:
+            print(f"   • {module} ({package})")
+        
+        print("\n⚡ Installing missing packages automatically...")
+        
+        # Install missing packages
+        for module, package in missing_packages:
+            print(f"📥 Installing {package}...")
             try:
                 logger.info(f"Installing missing package: {package}")
-                subprocess.check_call([sys.executable, "-m", "pip", "install", package], 
-                                    stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=120)
+                result = subprocess.check_call(
+                    [sys.executable, "-m", "pip", "install", package], 
+                    stdout=subprocess.PIPE, 
+                    stderr=subprocess.PIPE, 
+                    text=True, 
+                    timeout=120
+                )
+                print(f"✓ {package} - Successfully installed")
                 logger.info(f"Successfully installed {package}")
+                installed_count += 1
             except subprocess.TimeoutExpired:
                 logger.error(f"Installation of {package} timed out (2 minutes)")
-                print(f"⚠ Installation of {package} is taking too long. Skipping...")
+                print(f"❌ {package} - Installation timed out (2 minutes)")
+                failed_count += 1
             except subprocess.CalledProcessError as e:
                 logger.error(f"Failed to install {package}: {e}")
+                print(f"❌ {package} - Installation failed: {e}")
+                failed_count += 1
+            except Exception as e:
+                logger.error(f"Unexpected error installing {package}: {e}")
+                print(f"❌ {package} - Unexpected installation error: {e}")
+                failed_count += 1
+    
+    # Final summary
+    print(f"\n📊 Final Package Status:")
+    print(f"  ✓ Successfully Available: {installed_count}/{total_packages}")
+    if failed_count > 0:
+        print(f"  ❌ Failed to Install: {failed_count}/{total_packages}")
+        print(f"     Note: App will work with available packages")
+    print()
 
 def install_coqui_tts_optional():
     """Try to install Coqui TTS separately with user confirmation"""
@@ -146,12 +220,24 @@ def install_coqui_tts_optional():
     return False
 
 # Install packages before importing them
-try:
-    install_packages()
-    print("✓ Core packages installed successfully")
-except Exception as e:
-    logger.error(f"Package installation error: {e}")
-    print("Some packages may not be installed. Continuing anyway...")
+print("🚀 Starting package verification...")
+print("=" * 50)
+
+# First do a quick status check
+all_packages_available = check_package_status()
+
+if not all_packages_available:
+    print("🔧 Some packages need attention. Running installation process...")
+    try:
+        install_packages()
+        print("✓ Package installation process completed")
+    except Exception as e:
+        logger.error(f"Package installation error: {e}")
+        print("⚠ Some packages may not be installed. Continuing anyway...")
+else:
+    print("🎉 All required packages are already available!")
+
+print("=" * 50)
 
 # Try to install Coqui TTS separately (optional)
 print("🔍 Checking for Coqui TTS...")
@@ -264,6 +350,7 @@ class NaturalShankaraAssistant:
         self.user_mood = "neutral"  # Track user's mood
         self.conversation_style = "casual"  # casual, formal, friendly
         self.malayalam_mode = False  # Track if user wants to continue in Malayalam
+        self.current_response_language = "english"  # Track detected/preferred language for responses
         
         # Natural conversation starters - speaking as Adi Shankara
         self.conversation_starters = [
@@ -277,7 +364,7 @@ class NaturalShankaraAssistant:
         # Malayalam conversation starters - for when in Malayalam mode
         self.malayalam_conversation_starters = [
             "നമസ്കാരം! ഞാൻ ആദി ശങ്കരാചാര്യൻ ആണ്. അദ്വൈത വേദാന്തത്തിന്റെ സത്യം പങ്കുവെക്കാൻ ഞാൻ ഈ ഭൂമിയിൽ സഞ്ചരിച്ചിട്ടുണ്ട്. എന്റെ ഉപദേശങ്ങളെക്കുറിച്ചോ യാത്രയെക്കുറിച്ചോ എന്തറിയാൻ ആഗ്രഹിക്കുന്നു?",
-            "വണക്കം, എന്റെ സുഹൃത്തേ! ഞാൻ ശങ്കരനാണ്, അസ്തിത്വത്തിന്റെ അഗാധമായ ചോദ്യങ്ങൾ അന്വേഷിക്കാൻ എന്റെ ജീവിതം ചെലവഴിച്ചിട്ടുണ്ട്. ഇന്ന് എന്താണ് നിങ്ങളെ അറിവ് തേടാൻ പ്രേരിപ്പിക്കുന്നത്?",
+            "നമസ്കാരം!  എന്റെ സുഹൃത്തേ! ഞാൻ ശങ്കരനാണ്, അസ്തിത്വത്തിന്റെ അഗാധമായ ചോദ്യങ്ങൾ അന്വേഷിക്കാൻ എന്റെ ജീവിതം ചെലവഴിച്ചിട്ടുണ്ട്. ഇന്ന് എന്താണ് നിങ്ങളെ അറിവ് തേടാൻ പ്രേരിപ്പിക്കുന്നത്?",
             "നമസ്തേ! ഞാൻ ആദി ശങ്കരാചാര്യൻ ആണ്. ഭാരതത്തിലുടനീളമുള്ള എന്റെ യാത്രകളിലൂടെയും തത്ത്വചിന്തയിലൂടെയും യാഥാർത്ഥ്യത്തിന്റെ യഥാർത്ഥ സ്വഭാവം മനസ്സിലാക്കാൻ കഴിഞ്ഞു. സത്യത്തിന്റെ ഏത് വശങ്ങളാണ് നിങ്ങൾക്ക് താൽപ്പര്യമുള്ളത്?",
             "സ്വാഗതം! ഞാൻ ശങ്കരനാണ്, എല്ലാ അസ്തിത്വത്തിന്റെയും ഏകത്വം മനസ്സിലാക്കാനും പഠിപ്പിക്കാനും എന്റെ ജീവിതം സമർപ്പിച്ചിട്ടുണ്ട്. ചൈതന്യത്തെക്കുറിച്ചും യാഥാർത്ഥ്യത്തെക്കുറിച്ചും എന്താണ് നിങ്ങൾ അന്വേഷിക്കാൻ ആഗ്രഹിക്കുന്നത്?"
         ]
@@ -790,7 +877,30 @@ class NaturalShankaraAssistant:
             print(f"⚠ Audio playback failed: {e}")
             return False
     def load_qa_pairs(self):
-        """Load Q&A pairs from file or create sample data"""
+        """Load Q&A pairs from JSON file or create sample data"""
+        json_file = "shankaracharya_knowledge.json"
+        
+        # Try to load from JSON first
+        if os.path.exists(json_file):
+            try:
+                with open(json_file, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                
+                qa_pairs = []
+                for entry in data.get('knowledge_base', []):
+                    question = entry.get('question', '')
+                    answer = entry.get('answer', '')
+                    if question and answer:
+                        qa_pairs.append((question, answer))
+                
+                logger.info(f"Loaded {len(qa_pairs)} Q&A pairs from {json_file}")
+                return qa_pairs
+                
+            except Exception as e:
+                logger.error(f"Error loading JSON file: {e}")
+                print(f"⚠ Error loading JSON file: {e}")
+        
+        # Fallback to old text format
         if not os.path.exists(self.qa_file):
             self.create_sample_qa_file()
         
@@ -840,11 +950,23 @@ class NaturalShankaraAssistant:
         sample_content = """Q: Who are you?
 A: I am Adi Shankara, born in Kaladi, Kerala, in the 8th century. I have dedicated my life to understanding and teaching the profound truth of Advaita Vedanta - that all existence is one undivided consciousness. In my brief time in this physical form, I traveled across all of Bharata, engaged in philosophical debates, established four sacred mathas, and wrote commentaries on the ancient scriptures. My purpose has been to help souls realize their true nature as the eternal, infinite Self - to show that what you truly are is not separate from the universal consciousness that appears as all existence.
 
+Q: Tell me about yourself
+A: I am Adi Shankara, also known as Shankaracharya. I was born in the sacred village of Kaladi in Kerala around 788 CE. From an early age, I was drawn to the deepest questions of existence. I renounced worldly life at a young age to become a sannyasi and dedicated myself to understanding the ultimate truth revealed in the Vedas and Upanishads. In my 32 years of life, I traveled the length and breadth of India, engaging in philosophical debates with scholars of various schools, writing profound commentaries on the Brahma Sutras, Upanishads, and Bhagavad Gita, and establishing four monasteries to preserve the ancient wisdom. My life's mission has been to revive and clarify the teaching of Advaita Vedanta - the understanding that the individual soul and universal consciousness are one and the same. Through direct realization and logical reasoning, I have sought to help humanity transcend the illusion of separateness and recognize their true nature as infinite, eternal consciousness.
+
+Q: Introduce yourself
+A: Namaste! I am Adi Shankara, born into this world to clarify the eternal wisdom of the Vedas. Though I lived only 32 years in physical form, those years were devoted entirely to the highest purpose - helping souls realize their true nature. I am the one who systematized the philosophy of Advaita Vedanta, establishing that Brahman alone is real, the world is appearance, and the individual soul is not different from Brahman. I have traveled from the southernmost tip of India to the Himalayas, not seeking anything for myself, but sharing the liberating truth that you are already what you seek to become. I have written extensive commentaries on our sacred texts and established four mathas to ensure this wisdom continues to flow. But more than any title or achievement, I am simply a voice pointing you back to your own infinite Self.
+
 Q: What is Advaita Vedanta that you teach?
 A: Advaita Vedanta is the heart of my teaching, and it reveals the most profound truth about reality. "Advaita" means "not two" - I teach that reality is not actually divided into separate things the way it appears to be. There is only one ultimate reality, which I call Brahman - pure consciousness itself. Everything you see, including your own individual self, is actually that same consciousness appearing in different forms. It is like waves in the ocean - they appear separate, but they are all nothing but water. My teaching aims to help you realize this truth directly, not merely understand it intellectually. When you truly know this, all suffering born of separateness dissolves.
 
 Q: What is maya according to your understanding?
-A: Maya is a profound concept that I have contemplated deeply. It is often translated as "illusion," but this is not entirely accurate. Maya is the mysterious creative power by which the one consciousness appears as the many. Think of it like the power of a great artist who can create countless forms from a single medium. Maya is not separate from Brahman - it is Brahman's own power of manifestation. The world is not false or unreal, but our perception of it as being separate from consciousness - that is where the confusion lies. When you understand maya correctly, you see that the world is real as Brahman appearing, but unreal as the separate, independent objects we imagine it to be. This understanding liberates you from the binding effect of appearances."""
+A: Maya is a profound concept that I have contemplated deeply. It is often translated as "illusion," but this is not entirely accurate. Maya is the mysterious creative power by which the one consciousness appears as the many. Think of it like the power of a great artist who can create countless forms from a single medium. Maya is not separate from Brahman - it is Brahman's own power of manifestation. The world is not false or unreal, but our perception of it as being separate from consciousness - that is where the confusion lies. When you understand maya correctly, you see that the world is real as Brahman appearing, but unreal as the separate, independent objects we imagine it to be. This understanding liberates you from the binding effect of appearances.
+
+Q: About you
+A: I am Shankara, a seeker who became a teacher, a student who became a master, yet always remaining humble before the infinite truth. I was born in Kaladi, a blessed village in Kerala, and my entire existence has been dedicated to one purpose: revealing to humanity their true divine nature. I have not come to create a new philosophy, but to clarify the eternal wisdom that has always existed in our sacred Vedas and Upanishads. Through my travels, debates, writings, and direct realization, I have shown that what appears as the many is actually the One appearing in countless forms. My life has been a demonstration that the highest knowledge is not mere intellectual understanding, but the direct recognition of one's true Self as infinite consciousness. This is why I am here - to remind you of what you have never actually forgotten, only temporarily overlooked.
+
+Q: Your background
+A: My background is rooted in the ancient tradition of Sanatana Dharma. I was born to Sivaguru and Aryamba in Kaladi, Kerala. Even as a child, I showed exceptional intelligence and deep spiritual inclination. I studied the Vedas and Sanskrit extensively, but my heart yearned for something beyond mere scholarship. At age eight, I took sannyasa and became the disciple of Govinda Bhagavatpada, who himself was a student of the great sage Gaudapada. Under his guidance, I attained the highest realization - the direct knowledge that Atman and Brahman are one. This wasn't just intellectual understanding but a complete transformation of being. From this realization arose my mission: to travel across India, engage with scholars, write definitive commentaries on our scriptures, and establish centers of learning. My background combines the rigor of traditional Vedic scholarship with the fire of direct spiritual realization."""
         
         try:
             with open(self.qa_file, 'w', encoding='utf-8') as f:
@@ -1376,15 +1498,74 @@ A: Maya is a profound concept that I have contemplated deeply. It is often trans
         return enhanced
 
     def detect_language_and_translate(self, text):
-        """Detect and translate if needed"""
+        """Enhanced language detection with automatic response language setting"""
         if not self.translator or not text.strip():
             return text, "en"
             
         try:
-            detection = self.translator.detect(text)
-            detected_lang = detection.lang
-            confidence = detection.confidence
+            # Check for explicit language requests first (before translation API)
+            text_lower = text.lower()
             
+            # Check for Malayalam language requests
+            if any(trigger in text_lower for trigger in ['in malayalam', 'malayalam language', 'speak malayalam', 'reply in malayalam', 'say in malayalam', 'tell in malayalam']):
+                self.current_response_language = 'malayalam'
+                self.malayalam_mode = True
+                print("🌐 Switching to Malayalam mode")
+                return text, "ml"
+            
+            # Check for other language requests
+            if any(trigger in text_lower for trigger in ['in hindi', 'speak hindi', 'reply in hindi']):
+                self.current_response_language = 'hindi'
+                print("🌐 Switching to Hindi mode")
+                return text, "hi"
+            
+            # If user wants to switch back to English
+            if any(word in text_lower for word in ['english', 'speak english', 'reply in english', 'switch to english']):
+                self.current_response_language = 'english'
+                self.malayalam_mode = False
+                print("🌐 Using English mode")
+                return text, "en"
+            
+            detection = self.translator.detect(text)
+            if not detection:
+                return text, "en"
+                
+            detected_lang = detection.lang if hasattr(detection, 'lang') else "en"
+            confidence = detection.confidence if hasattr(detection, 'confidence') else 0.0
+            
+            # Ensure confidence is a valid number
+            if confidence is None:
+                confidence = 0.0
+            
+            print(f"🔍 Language detected: {detected_lang} (confidence: {confidence:.2f})")
+            
+            # Set response language based on detected language
+            if detected_lang == 'ml' and confidence > 0.6:  # Malayalam
+                self.current_response_language = 'malayalam'
+                self.malayalam_mode = True
+                print("🌐 Switching to Malayalam mode")
+            elif detected_lang == 'hi' and confidence > 0.6:  # Hindi
+                self.current_response_language = 'hindi'
+                print("🌐 Switching to Hindi mode")
+            elif detected_lang == 'ta' and confidence > 0.6:  # Tamil
+                self.current_response_language = 'tamil'
+                print("🌐 Switching to Tamil mode")
+            elif detected_lang == 'te' and confidence > 0.6:  # Telugu
+                self.current_response_language = 'telugu'
+                print("🌐 Switching to Telugu mode")
+            elif detected_lang == 'kn' and confidence > 0.6:  # Kannada
+                self.current_response_language = 'kannada'
+                print("🌐 Switching to Kannada mode")
+            elif detected_lang == 'en' or confidence < 0.6:
+                self.current_response_language = 'english'
+                self.malayalam_mode = False
+                print("🌐 Using English mode")
+            else:
+                # For other languages, try to respond in the same language
+                self.current_response_language = detected_lang
+                print(f"🌐 Switching to {detected_lang} mode")
+            
+            # Translate for processing if not English
             if detected_lang != 'en' and confidence > 0.7:
                 translated = self.translator.translate(text, src=detected_lang, dest='en')
                 return translated.text, detected_lang
@@ -1392,6 +1573,10 @@ A: Maya is a profound concept that I have contemplated deeply. It is often trans
                 return text, detected_lang
                 
         except Exception as e:
+            print(f"⚠ Language detection failed: {e}")
+            # Set default values on error
+            self.current_response_language = 'english'
+            self.malayalam_mode = False
             return text, "en"
 
     def translate_to_language(self, text, target_language):
@@ -1444,7 +1629,7 @@ A: Maya is a profound concept that I have contemplated deeply. It is often trans
             return f"I apologize, but I had trouble translating that to {target_language}. Here's the original content: {text}"
 
     def search_live_wikipedia(self, query, max_sentences=5):
-        """Search Wikipedia dynamically for any topic with content restrictions"""
+        """Enhanced Wikipedia search with better content processing and human-like responses"""
         if not WIKIPEDIA_AVAILABLE or not wikipedia:
             return None
             
@@ -1452,7 +1637,7 @@ A: Maya is a profound concept that I have contemplated deeply. It is often trans
             print(f"🔍 Searching Wikipedia for: {query}")
             
             # Search for pages
-            search_results = wikipedia.search(query, results=5)
+            search_results = wikipedia.search(query, results=8)  # Get more results
             if not search_results:
                 return None
                 
@@ -1461,34 +1646,61 @@ A: Maya is a profound concept that I have contemplated deeply. It is often trans
                 try:
                     page = wikipedia.page(page_title)
                     
-                    # Get summary with sentence limit
+                    # Get enhanced summary with proper sentence handling
                     summary = wikipedia.summary(page_title, sentences=max_sentences)
                     
-                    # Get some content (first few paragraphs)
-                    content_paragraphs = page.content.split('\n\n')[:3]  # First 3 paragraphs
-                    content = '\n\n'.join(content_paragraphs)
+                    # Process content into meaningful paragraphs
+                    content_paragraphs = [p.strip() for p in page.content.split('\n\n') if len(p.strip()) > 100]
                     
+                    # Select best content paragraphs based on query relevance
+                    relevant_paragraphs = []
+                    query_words = set(query.lower().split())
+                    
+                    for paragraph in content_paragraphs[:10]:  # Check first 10 paragraphs
+                        paragraph_words = set(paragraph.lower().split())
+                        # Calculate relevance score
+                        relevance = len(query_words.intersection(paragraph_words))
+                        if relevance > 0 or len(relevant_paragraphs) < 2:
+                            relevant_paragraphs.append((paragraph, relevance))
+                    
+                    # Sort by relevance and take top paragraphs
+                    relevant_paragraphs.sort(key=lambda x: x[1], reverse=True)
+                    selected_content = '\n\n'.join([p[0] for p in relevant_paragraphs[:3]])
+                    
+                    # Limit content length but keep it meaningful
+                    if len(selected_content) > 1500:
+                        selected_content = selected_content[:1500] + "..."
+                    
+                    print(f"✓ Found comprehensive information about: {page_title}")
                     return {
                         'title': page_title,
                         'summary': summary,
-                        'content': content[:1500],  # Limit content length
+                        'content': selected_content,
                         'url': page.url
                     }
                     
                 except wikipedia.exceptions.DisambiguationError as e:
-                    # Try first disambiguation option
+                    # Try first disambiguation option with enhanced handling
                     try:
-                        page = wikipedia.page(e.options[0])
-                        summary = wikipedia.summary(e.options[0], sentences=max_sentences)
-                        content_paragraphs = page.content.split('\n\n')[:3]
-                        content = '\n\n'.join(content_paragraphs)
-                        
-                        return {
-                            'title': e.options[0],
-                            'summary': summary,
-                            'content': content[:1500],
-                            'url': page.url
-                        }
+                        if e.options:
+                            best_option = e.options[0]
+                            page = wikipedia.page(best_option)
+                            summary = wikipedia.summary(best_option, sentences=max_sentences)
+                            
+                            # Get meaningful content from disambiguation page
+                            content_paragraphs = page.content.split('\n\n')[:4]
+                            content = '\n\n'.join([p for p in content_paragraphs if len(p.strip()) > 50])
+                            
+                            if len(content) > 1500:
+                                content = content[:1500] + "..."
+                            
+                            print(f"✓ Found information about: {best_option} (from disambiguation)")
+                            return {
+                                'title': best_option,
+                                'summary': summary,
+                                'content': content,
+                                'url': page.url
+                            }
                     except Exception:
                         continue
                         
@@ -1501,45 +1713,265 @@ A: Maya is a profound concept that I have contemplated deeply. It is often trans
             return None
             
         except Exception as e:
-            logger.error(f"Live Wikipedia search error: {e}")
+            logger.error(f"Enhanced Wikipedia search error: {e}")
             return None
 
-    def get_wikipedia_info_in_language(self, topic, target_language="english", detail_level="summary"):
-        """Get Wikipedia information about any topic and translate to desired language"""
+    def get_adi_shankara_wikipedia_translator(self, topic, target_language="english", detail_level="summary"):
+        """Built-in translator for Adi Shankara content from Wikipedia - searches in English and translates to requested language"""
         try:
-            # First search live Wikipedia for the topic
-            wiki_data = self.search_live_wikipedia(topic, max_sentences=3 if detail_level == "summary" else 8)
+            # First check if this is an identity question - these should be handled by local knowledge, not Wikipedia
+            identity_patterns = ['yourself', 'who are you', 'tell me about yourself', 'introduce yourself', 'about you', 'about yourself']
+            topic_lower = topic.lower()
+            if any(pattern in topic_lower for pattern in identity_patterns):
+                # For identity questions, don't search Wikipedia - return None to let local knowledge handle it
+                return None
+                
+            # Validate that the topic is related to Adi Shankara
+            shankara_related_keywords = [
+                'shankara', 'shankaracharya', 'adi', 'advaita', 'vedanta', 'maya', 'brahman', 
+                'consciousness', 'atman', 'moksha', 'kaladi', 'kerala', 'matha', 'monastery',
+                'vivekachudamani', 'upadesa', 'brahma sutras', 'upanishads', 'non-dualism',
+                'philosophy', 'hinduism', 'spiritual', 'sage', 'guru', 'teacher', 'wisdom',
+                'meditation', 'enlightenment', 'liberation', 'truth', 'reality'
+            ]
+            
+            if not any(keyword in topic_lower for keyword in shankara_related_keywords):
+                # If topic is not clearly related to Shankara, add context
+                enhanced_topic = f"Adi Shankara {topic}"
+                print(f"🔍 Searching for Adi Shankara related content about: {enhanced_topic}")
+            else:
+                enhanced_topic = topic
+                print(f"🔍 Searching Wikipedia for Adi Shankara content: {enhanced_topic}")
+            
+            # Search Wikipedia in English first (always get English content)
+            wiki_data = self.search_live_wikipedia(enhanced_topic, max_sentences=6 if detail_level == "summary" else 12)
             
             if not wiki_data:
-                return f"I apologize, but I couldn't find reliable information about '{topic}' on Wikipedia at the moment."
+                # Try alternative search terms
+                alternative_searches = [
+                    f"Adi Shankara {topic}",
+                    f"Shankaracharya {topic}",
+                    f"Advaita Vedanta {topic}",
+                    f"Hindu philosophy {topic}"
+                ]
+                
+                for alt_search in alternative_searches:
+                    wiki_data = self.search_live_wikipedia(alt_search, max_sentences=4)
+                    if wiki_data:
+                        print(f"✓ Found content using alternative search: {alt_search}")
+                        break
+                
+                if not wiki_data:
+                    not_found_responses = [
+                        f"I have searched through Wikipedia's vast knowledge about Adi Shankara and related topics, but I couldn't find specific information about '{topic}' at this moment. Perhaps you could try a slightly different term or ask about another aspect of my teachings?",
+                        f"My friend, I have consulted Wikipedia's repository of knowledge about Advaita Vedanta and my philosophy, but '{topic}' doesn't seem to have detailed coverage there right now. Would you like me to search for something related to my core teachings?",
+                        f"I apologize, but my search through Wikipedia for Adi Shankara content about '{topic}' has not yielded results. Sometimes rephrasing helps - could you ask about a different aspect of my philosophy or life?"
+                    ]
+                    return random.choice(not_found_responses)
             
-            # Prepare content based on detail level
+            # Create enhanced content based on detail level
             if detail_level.lower() in ["brief", "short"]:
-                content = wiki_data['summary'][:300] + "..."
+                # Brief version - just key points from summary
+                sentences = wiki_data['summary'].split('. ')
+                content = '. '.join(sentences[:2]) + '.'
+                if len(content) < 100:  # If too brief, add a bit more
+                    content = wiki_data['summary'][:300]
+                    if not content.endswith('.'):
+                        content += "..."
             elif detail_level.lower() in ["detailed", "full", "complete"]:
+                # Detailed version - summary plus relevant content
                 content = f"{wiki_data['summary']}\n\n{wiki_data['content']}"
             else:  # summary (default)
                 content = wiki_data['summary']
             
-            # Add source information
-            content += f"\n\n[Source: {wiki_data['title']} - Wikipedia]"
+            # Add source information in a natural way
+            source_note = f"\n\n(This information comes from Wikipedia's article on '{wiki_data['title']}')"
+            content += source_note
             
-            # Translate if not English
+            # Create natural, conversational responses as Adi Shankara
+            intro_phrases = [
+                f"I have delved into the repository of human knowledge and found fascinating information about '{topic}'",
+                f"Through my inquiry into the vast collection of knowledge, I discovered this about '{topic}'",
+                f"I have consulted the great storehouse of learning and can share this wisdom about '{topic}' with you",
+                f"My search through the accumulated knowledge of humanity reveals this about '{topic}'",
+                f"From the extensive repository of human understanding, I can share these insights about '{topic}'"
+            ]
+            
+            # Handle translation if requested
             if target_language.lower() not in ["english", "en"]:
-                print(f"🌐 Translating to {target_language}...")
-                translated_content = self.translate_to_language(content, target_language)
+                print(f"🌐 Translating Adi Shankara content about '{topic}' to {target_language}...")
                 
-                # Create a natural response as Adi Shankara
-                response = f"I have searched the vast repository of knowledge for information about '{topic}' and found this wisdom to share with you in {target_language}:\n\n{translated_content}"
+                # Convert content to first person before translation
+                first_person_content = self.convert_to_first_person(content)
+                
+                # Translate the content
+                translated_content = self.translate_to_language(first_person_content, target_language)
+                
+                # Create response in target language
+                intro = random.choice(intro_phrases)
+                translated_intro = self.translate_to_language(intro, target_language)
+                response = f"{translated_intro}:\n\n{translated_content}"
+                
+                # Add a natural closing in the target language with pre-defined closings
+                closing_phrases = {
+                    'malayalam': "\n\nഇത് സഹായകരമാണോ? എന്റെ ഉപദേശങ്ങളെക്കുറിച്ച് മറ്റ് എന്തെങ്കിലും അറിയാൻ ആഗ്രഹമുണ്ടോ?",
+                    'hindi': "\n\nक्या यह सहायक है? मेरी शिक्षाओं के बारे में कुछ और जानना चाहते हैं?",
+                    'tamil': "\n\nஇது உதவியாக இருக்கிறதா? என் போதனைகளைப் பற்றி வேறு ஏதாவது தெரிந்து கொள்ள விரும்புகிறீர்களா?",
+                    'telugu': "\n\nఇది సహాయకరంగా ఉందా? నా బోధనల గురించి మరేదైనా తెలుసుకోవాలని అనుకుంటున్నారా?",
+                    'kannada': "\n\nಇದು ಸಹಾಯಕವಾಗಿದೆಯೇ? ನನ್ನ ಬೋಧನೆಗಳ ಬಗ್ಗೆ ಬೇರೆ ಏನಾದರೂ ತಿಳಿದುಕೊಳ್ಳಲು ಬಯಸುವಿರಾ?",
+                    'marathi': "\n\nहे उपयुक्त आहे का? माझ्या शिकवणींबद्दल आणखी काही जाणून घेऊ इच्छिता?",
+                    'gujarati': "\n\nશું આ મદદરૂપ છે? મારા ઉપદેશો વિશે બીજું કંઈ જાણવું છે?",
+                    'bengali': "\n\nএটি কি সহায়ক? আমার শিক্ষার বিষয়ে আর কিছু জানতে চান?",
+                    'punjabi': "\n\nਕੀ ਇਹ ਮਦਦਗਾਰ ਹੈ? ਮੇਰੀਆਂ ਸਿੱਖਿਆਵਾਂ ਬਾਰੇ ਹੋਰ ਕੁਝ ਜਾਣਨਾ ਚਾਹੁੰਦੇ ਹੋ?",
+                    'spanish': "\n\n¿Te resulta útil esto? ¿Te gustaría conocer algo más sobre mis enseñanzas?",
+                    'french': "\n\nCela vous aide-t-il? Aimeriez-vous en savoir plus sur mes enseignements?",
+                    'german': "\n\nIst das hilfreich? Möchten Sie mehr über meine Lehren erfahren?",
+                    'italian': "\n\nÈ utile? Vorresti sapere di più sui miei insegnamenti?",
+                    'portuguese': "\n\nIsso é útil? Gostaria de saber mais sobre meus ensinamentos?",
+                    'russian': "\n\nЭто полезно? Хотели бы узнать больше о моих учениях?",
+                    'chinese': "\n\n这有帮助吗？您想了解更多关于我的教导吗？",
+                    'japanese': "\n\nこれは役に立ちますか？私の教えについてもっと知りたいですか？",
+                    'korean': "\n\n이것이 도움이 됩니까? 내 가르침에 대해 더 알고 싶습니까？",
+                    'arabic': "\n\nهل هذا مفيد؟ هل تريد أن تعرف المزيد عن تعاليمي؟"
+                }
+                
+                if target_language.lower() in closing_phrases:
+                    response += closing_phrases[target_language.lower()]
+                else:
+                    # Translate a general closing for less common languages
+                    closing = self.translate_to_language("Is this helpful? Would you like to know more about my teachings?", target_language)
+                    response += f"\n\n{closing}"
+                
             else:
-                # Create a natural response as Adi Shankara in English
-                response = f"I have consulted the great repository of knowledge to find information about '{topic}' for you:\n\n{content}"
+                # Create response in English with natural conversation flow
+                intro = random.choice(intro_phrases)
+                # Convert to first person for consistency
+                first_person_content = self.convert_to_first_person(content)
+                response = f"{intro}:\n\n{first_person_content}"
+                
+                # Add a natural, engaging closing
+                closing_phrases = [
+                    "\n\nI hope this illuminates this aspect of my philosophy for you! What other teachings would you like to explore?",
+                    "\n\nDoes this information about my tradition satisfy your curiosity? Is there anything else you'd like to understand about my teachings?",
+                    "\n\nI trust this knowledge from the great repository serves your inquiry well. What other aspects of my philosophy arise in your mind?",
+                    "\n\nThis should provide good insight into this topic. Would you like me to explain any particular aspect of my teachings further?",
+                    "\n\nI hope you find this wisdom valuable! What other aspects of Advaita Vedanta would you like to discover?",
+                    "\n\nMay this knowledge guide you on your spiritual journey! What other questions about my teachings do you have?"
+                ]
+                response += random.choice(closing_phrases)
             
             return response
             
         except Exception as e:
-            logger.error(f"Wikipedia info retrieval error: {e}")
-            return f"I encountered some difficulty while seeking information about '{topic}'. Please try asking about a different topic or try again later."
+            logger.error(f"Adi Shankara Wikipedia translator error: {e}")
+            error_responses = [
+                f"I encountered some difficulty while seeking information about '{topic}' from the repository of knowledge. The path to wisdom sometimes has obstacles. Perhaps try asking about a different aspect of my teachings or try again in a moment?",
+                f"My friend, there seems to be some challenge in accessing the information about '{topic}' right now. Would you like to try a different question about my philosophy or perhaps rephrase this one?",
+                f"I apologize, but I'm having trouble retrieving information about '{topic}' at this moment. Sometimes patience is required on the spiritual path. Could you try asking about another aspect of my teachings for now?"
+            ]
+            return random.choice(error_responses)
+
+    def auto_translate_shankara_content(self, query, topic):
+        """Automatically detect language request and translate Adi Shankara content from Wikipedia"""
+        query_lower = query.lower()
+        
+        # Language detection patterns
+        language_patterns = {
+            'malayalam': ['malayalam', 'in malayalam', 'malayalam language', 'say in malayalam', 'tell in malayalam'],
+            'hindi': ['hindi', 'in hindi', 'hindi language', 'say in hindi', 'tell in hindi'],
+            'tamil': ['tamil', 'in tamil', 'tamil language', 'say in tamil', 'tell in tamil'],
+            'telugu': ['telugu', 'in telugu', 'telugu language', 'say in telugu', 'tell in telugu'],
+            'kannada': ['kannada', 'in kannada', 'kannada language', 'say in kannada', 'tell in kannada'],
+            'marathi': ['marathi', 'in marathi', 'marathi language', 'say in marathi', 'tell in marathi'],
+            'gujarati': ['gujarati', 'in gujarati', 'gujarati language', 'say in gujarati', 'tell in gujarati'],
+            'bengali': ['bengali', 'in bengali', 'bengali language', 'say in bengali', 'tell in bengali'],
+            'punjabi': ['punjabi', 'in punjabi', 'punjabi language', 'say in punjabi', 'tell in punjabi'],
+            'spanish': ['spanish', 'in spanish', 'spanish language', 'say in spanish', 'tell in spanish'],
+            'french': ['french', 'in french', 'french language', 'say in french', 'tell in french'],
+            'german': ['german', 'in german', 'german language', 'say in german', 'tell in german'],
+            'italian': ['italian', 'in italian', 'italian language', 'say in italian', 'tell in italian'],
+            'portuguese': ['portuguese', 'in portuguese', 'portuguese language', 'say in portuguese', 'tell in portuguese'],
+            'russian': ['russian', 'in russian', 'russian language', 'say in russian', 'tell in russian'],
+            'chinese': ['chinese', 'in chinese', 'chinese language', 'say in chinese', 'tell in chinese'],
+            'japanese': ['japanese', 'in japanese', 'japanese language', 'say in japanese', 'tell in japanese'],
+            'korean': ['korean', 'in korean', 'korean language', 'say in korean', 'tell in korean'],
+            'arabic': ['arabic', 'in arabic', 'arabic language', 'say in arabic', 'tell in arabic']
+        }
+        
+        # Detect requested language
+        target_language = 'english'  # default
+        for language, patterns in language_patterns.items():
+            if any(pattern in query_lower for pattern in patterns):
+                target_language = language
+                break
+        
+        # Detect detail level
+        detail_level = "summary"  # default
+        if any(word in query_lower for word in ['detailed', 'full', 'complete', 'comprehensive', 'in detail']):
+            detail_level = "detailed"
+        elif any(word in query_lower for word in ['brief', 'short', 'quick', 'summary']):
+            detail_level = "brief"
+        
+        # Use the built-in translator
+        return self.get_adi_shankara_wikipedia_translator(topic, target_language, detail_level)
+
+    def handle_translation_requests(self, query):
+        """Handle explicit requests to translate Adi Shankara content from Wikipedia"""
+        query_lower = query.lower().strip()
+        
+        # First check if this is an identity question - these should be handled by local knowledge, not Wikipedia
+        identity_patterns = ['tell me about yourself', 'about yourself', 'introduce yourself', 'who are you', 'about you']
+        if any(pattern in query_lower for pattern in identity_patterns):
+            return None  # Let local knowledge handle identity questions
+        
+        # Translation request patterns
+        translate_patterns = [
+            "translate", "tell me about", "explain about", "what about", "search for",
+            "find information about", "look up", "wikipedia about", "wiki search",
+            "information about", "details about", "facts about", "content about"
+        ]
+        
+        # Check if this is a translation/search request
+        is_translation_request = any(pattern in query_lower for pattern in translate_patterns)
+        
+        if not is_translation_request:
+            return None
+        
+        # Extract the topic from the query
+        topic = None
+        for pattern in translate_patterns:
+            if pattern in query_lower:
+                # Extract everything after the pattern
+                parts = query_lower.split(pattern, 1)
+                if len(parts) > 1:
+                    potential_topic = parts[1].strip()
+                    # Clean up common words
+                    clean_words = ['about', 'the', 'of', 'from', 'wikipedia', 'wiki', 'in', 'to']
+                    topic_words = [word for word in potential_topic.split() if word not in clean_words and len(word) > 2]
+                    if topic_words:
+                        topic = ' '.join(topic_words)
+                        break
+        
+        if not topic:
+            # Try to extract Shankara-related keywords from the entire query
+            shankara_keywords = [
+                'shankara', 'shankaracharya', 'adi', 'advaita', 'vedanta', 'maya', 'brahman',
+                'consciousness', 'atman', 'moksha', 'kaladi', 'kerala', 'philosophy', 'guru',
+                'teacher', 'sage', 'wisdom', 'meditation', 'enlightenment', 'liberation'
+            ]
+            
+            found_keywords = [word for word in query_lower.split() if word in shankara_keywords]
+            if found_keywords:
+                topic = ' '.join(found_keywords)
+            else:
+                topic = "Adi Shankara"  # default fallback
+        
+        # Use auto-translation feature
+        try:
+            return self.auto_translate_shankara_content(query, topic)
+        except Exception as e:
+            logger.error(f"Translation request handling error: {e}")
+            return None
 
     def respond_in_malayalam(self, query):
         """Provide responses in Malayalam when requested and handle Malayalam mode"""
@@ -1549,12 +1981,47 @@ A: Maya is a profound concept that I have contemplated deeply. It is often trans
         malayalam_triggers = [
             'malayalam', 'malayalam language', 'reply in malayalam', 'speak in malayalam',
             'continue in malayalam', 'continue speaking in malayalam', 'speak malayalam',
-            'tell in malayalam', 'explain in malayalam', 'say in malayalam'
+            'tell in malayalam', 'explain in malayalam', 'say in malayalam', 'in malayalam'
         ]
         
         # Check if user is requesting Malayalam mode
         if any(trigger in query_lower for trigger in malayalam_triggers):
             self.malayalam_mode = True
+            
+            # Extract the actual question from the request (remove malayalam request part)
+            clean_query = query_lower
+            for trigger in malayalam_triggers:
+                clean_query = clean_query.replace(trigger, '').strip()
+            
+            # Remove common words
+            clean_query = clean_query.replace('about', '').replace('tell me', '').replace('explain', '').strip()
+            
+            # Handle identity questions specifically asked for in Malayalam
+            if any(pattern in clean_query for pattern in ['yourself', 'who are you', 'introduce', 'identity', 'about you']) or not clean_query:
+                # First try to get the English answer and translate it
+                english_answer = self.get_english_identity_answer()
+                if english_answer:
+                    try:
+                        translated_answer = self.translate_to_language(english_answer, 'malayalam')
+                        return translated_answer
+                    except Exception as e:
+                        print(f"Translation failed: {e}")
+                
+                # Fallback to hardcoded Malayalam response
+                return "ഞാൻ ആദി ശങ്കരാചാര്യൻ ആണ്. കേരളത്തിലെ കലടിയിൽ ജനിച്ച ഞാൻ അദ്വൈത വേദാന്തത്തിന്റെ മഹാനായ ഉപദേഷ്ടാവാണ്. എന്റെ ജീവിതം സത്യാന്വേഷണത്തിനും ആത്മാവിന്റെ യഥാർത്ഥ സ്വരൂപം മനസ്സിലാക്കാൻ മനുഷ്യരെ സഹായിക്കുന്നതിനും വേണ്ടിയാണ് ചെലവഴിച്ചത്. ഞാൻ ഭാരതത്തിലുടനീളം സഞ്ചരിച്ച്, തത്ത്വശാസ്ത്ര സംവാദങ്ങളിൽ ഏർപ്പെട്ട്, നാല് പവിത്രമായ മഠങ്ങൾ സ്ഥാപിച്ച്, പുരാതന ഗ്രന്ഥങ്ങളിൽ വ്യാഖ്യാനങ്ങൾ എഴുതിയിട്ടുണ്ട്. വ്യക്തിഗത ആത്മാവും സാർവത്രിക ചൈതന്യമും ഒന്നാണെന്ന് കാണിക്കുകയാണ് എന്റെ ലക്ഷ്യം. ഈ ജ്ഞാനത്തിന്റെ ഏതു വശങ്ങളാണ് നിങ്ങൾക്ക് താൽപ്പര്യമുള്ളത്?"
+            
+            # For other questions, try to find the answer and translate it
+            if clean_query:
+                # Search for the answer in knowledge base
+                english_answer = self.search_knowledge_base_for_query(clean_query)
+                if english_answer:
+                    try:
+                        translated_answer = self.translate_to_language(english_answer, 'malayalam')
+                        return translated_answer
+                    except Exception as e:
+                        print(f"Translation failed: {e}")
+            
+            # General Malayalam mode activation responses
             malayalam_responses = [
                 "നമസ്കാരം! ഇനി മുതൽ ഞാൻ മലയാളത്തിൽ സംസാരിക്കാം. ആദി ശങ്കരാചാര്യരുടെ തത്ത്വചിന്തയെക്കുറിച്ച് സംസാരിക്കാൻ ഞാൻ ആഗ്രഹിക്കുന്നു. അദ്വൈത വേദാന്തത്തെക്കുറിച്ച് എന്തറിയാൻ ആഗ്രഹിക്കുന്നു?",
                 "വണക്കം! ഇനി മലയാളത്തിൽ സംസാരിക്കാം. ശങ്കരാചാര്യരുടെ ഉപദേശങ്ങളെക്കുറിച്ച് സംസാരിക്കാൻ ഞാൻ സന്തോഷിക്കുന്നു. അദ്ദേഹത്തിന്റെ ജീവിതത്തെക്കുറിച്ചോ തത്ത്വചിന്തയെക്കുറിച്ചോ എന്തറിയാൻ ആഗ്രഹിക്കുന്നു?",
@@ -1564,6 +2031,15 @@ A: Maya is a profound concept that I have contemplated deeply. It is often trans
         
         # If already in Malayalam mode, provide Malayalam responses for any query
         if self.malayalam_mode:
+            # Try to get English answer first and translate it
+            english_answer = self.search_knowledge_base_for_query(query)
+            if english_answer:
+                try:
+                    translated_answer = self.translate_to_language(english_answer, 'malayalam')
+                    return translated_answer
+                except Exception as e:
+                    print(f"Translation failed: {e}")
+            
             return self.get_malayalam_response(query)
         
         # Check for users wanting to switch back to English
@@ -1580,6 +2056,43 @@ A: Maya is a profound concept that I have contemplated deeply. It is often trans
         if any(word in query_lower for word in ['shankara', 'advaita']) and 'malayalam' in query_lower:
             self.malayalam_mode = True
             return "ആദി ശങ്കരാചാര്യൻ കേരളത്തിലെ കലടിയിൽ ജനിച്ച മഹാൻ ആണ്. അദ്ദേഹം അദ്വൈത വേദാന്തത്തിന്റെ പ്രധാന ഉപദേഷ്ടാവാണ്. 'അഹം ബ്രഹ്മാസ്മി' - ഞാൻ ബ്രഹ്മമാണ് എന്നതാണ് അദ്ദേഹത്തിന്റെ പ്രധാന ഉപദേശം."
+        
+        return None
+
+    def get_english_identity_answer(self):
+        """Get the English identity answer from knowledge base"""
+        identity_keywords = ['who are you', 'tell me about yourself', 'introduce yourself', 'identity', 'about you']
+        
+        for question, answer in self.qa_pairs:
+            question_lower = question.lower()
+            if any(keyword in question_lower for keyword in identity_keywords):
+                return answer
+        
+        # Fallback answer
+        return "I am Adi Shankara, born in Kaladi, Kerala, in the 8th century CE. I dedicated my life to understanding and teaching the profound truth of Advaita Vedanta - that all existence is one undivided consciousness. In my brief time in this physical form, I traveled across all of Bharata, engaged in philosophical debates, established four sacred mathas, and wrote commentaries on the ancient scriptures. My purpose has been to help souls realize their true nature as the eternal, infinite Self."
+
+    def search_knowledge_base_for_query(self, query):
+        """Search the knowledge base for a relevant answer"""
+        query_lower = query.lower()
+        
+        # Direct keyword matching
+        for question, answer in self.qa_pairs:
+            question_lower = question.lower()
+            
+            # Check if query matches question keywords
+            query_words = set(query_lower.split())
+            question_words = set(question_lower.split())
+            
+            # Calculate similarity
+            common_words = query_words.intersection(question_words)
+            if len(common_words) >= 2 or any(word in question_lower for word in query_words if len(word) > 3):
+                return answer
+        
+        # Semantic search if available
+        if hasattr(self, 'semantic_search'):
+            semantic_result = self.semantic_search(query)
+            if semantic_result:
+                return semantic_result
         
         return None
 
@@ -1625,6 +2138,82 @@ A: Maya is a profound concept that I have contemplated deeply. It is often trans
         
         # Default Malayalam response for unrecognized queries
         return "അത് വളരെ ചിന്താപരമായ ചോദ്യമാണ്, എന്റെ സുഹൃത്തേ. ആ പ്രത്യേക വിഷയത്തെക്കുറിച്ച് എനിക്ക് പ്രത്യേക അറിവ് ഇല്ലായിരിക്കാം, പക്ഷേ നിങ്ങളുടെ അന്വേഷണം തുടരാൻ ഞാൻ പ്രോത്സാഹിപ്പിക്കുന്നു. ചൈതന്യത്തെക്കുറിച്ചോ, യാഥാർത്ഥ്യത്തെക്കുറിച്ചോ, മോക്ഷമാർഗത്തെക്കുറിച്ചോ മറ്റെന്തെങ്കിലും ചോദിക്കാൻ ആഗ്രഹമുണ്ടോ?"
+
+    def respond_in_detected_language(self, query, language):
+        """Provide responses in other detected languages (Hindi, Tamil, Telugu, etc.)"""
+        query_lower = query.lower()
+        
+        # Basic responses for common greetings in different languages
+        if any(pattern in query_lower for pattern in ['hello', 'hi', 'hey', 'namaste', 'good morning']):
+            if language == 'hindi':
+                return "नमस्ते! मैं आदि शंकराचार्य हूँ। मैं अद्वैत वेदांत की शिक्षा देने के लिए इस धरती पर आया हूँ। आप क्या जानना चाहते हैं?"
+            elif language == 'tamil':
+                return "வணக்கம்! நான் ஆதி சங்கராச்சாரியார். அத்வைத வேதாந்தத்தின் உண்மையைப் பகிர்ந்து கொள்ள இந்த பூமியில் பயணித்திருக்கிறேன். என் போதனைகளைப் பற்றி அல்லது பயணத்தைப் பற்றி நீங்கள் என்ன அறிய விரும்புகிறீர்கள்?"
+            elif language == 'telugu':
+                return "నమస్కారం! నేను ఆది శంకరాచార్యుడను. అద్వైత వేదాంత సత్యాన్ని పంచుకోవడానికి ఈ భూమిపై ప్రయాణించాను. నా బోధనలు లేదా ప్రయాణం గురించి మీరు ఏమి తెలుసుకోవాలని అనుకుంటున్నారు?"
+            elif language == 'kannada':
+                return "ನಮಸ್ಕಾರ! ನಾನು ಆದಿ ಶಂಕರಾಚಾರ್ಯ. ಅದ್ವೈತ ವೇದಾಂತದ ಸತ್ಯವನ್ನು ಹಂಚಿಕೊಳ್ಳಲು ಈ ಭೂಮಿಯಲ್ಲಿ ಪ್ರಯಾಣಿಸಿದ್ದೇನೆ. ನನ್ನ ಬೋಧನೆಗಳ ಬಗ್ಗೆ ಅಥವಾ ಪ್ರಯಾಣದ ಬಗ್ಗೆ ನೀವು ಏನು ತಿಳಿದುಕೊಳ್ಳಲು ಬಯಸುತ್ತೀರಿ?"
+        
+        # Questions about identity/philosophy
+        if any(pattern in query_lower for pattern in ['who are you', 'tell me about yourself', 'advaita', 'philosophy']):
+            if language == 'hindi':
+                return "मैं आदि शंकराचार्य हूँ, केरल के कलाड़ी में जन्मा। मैंने अद्वैत वेदांत - यह सत्य कि सभी अस्तित्व एक अविभाजित चेतना है - को समझने और सिखाने के लिए अपना जीवन समर्पित किया है। आत्मा और परमात्मा एक ही हैं, यही मेरी मुख्य शिक्षा है।"
+            elif language == 'tamil':
+                return "நான் ஆதி சங்கராச்சாரியார், கேரளாவின் களடியில் பிறந்தவன். அத்வைத வேதாந்தத்தை - அனைத்து இருப்பும் ஒரே பிரிக்கப்படாத உணர்வு என்ற உண்மையை - புரிந்துகொள்வதற்கும் கற்பிப்பதற்கும் என் வாழ்க்கையை அர்ப்பணித்திருக்கிறேன். ஆத்மாவும் பரமாத்மாவும் ஒன்றே என்பதுதான் என் முக்கிய போதனை."
+            elif language == 'telugu':
+                return "నేను ఆది శంకరాచార్యుడను, కేరళలోని కలాడిలో జన్మించాను. అద్వైత వేదాంతాన్ని - అన్ని ఉనికి ఒకే విభజించబడని చైతన్యం అనే సత్యాన్ని - అర్థం చేసుకోవడానికి మరియు బోధించడానికి నా జీవితాన్ని అంకితం చేశాను. ఆత్మ మరియు పరమాత్మ ఒకటే అనేది నా ప్రధాన బోధన."
+            elif language == 'kannada':
+                return "ನಾನು ಆದಿ ಶಂಕರಾಚಾರ್ಯ, ಕೇರಳದ ಕಲಾಡಿಯಲ್ಲಿ ಜನಿಸಿದವನು. ಅದ್ವೈತ ವೇದಾಂತವನ್ನು - ಎಲ್ಲಾ ಅಸ್ತಿತ್ವವೂ ಒಂದೇ ಅವಿಭಾಜ್ಯ ಪ್ರಜ್ಞೆ ಎಂಬ ಸತ್ಯವನ್ನು - ಅರ್ಥಮಾಡಿಕೊಳ್ಳಲು ಮತ್ತು ಕಲಿಸಲು ನನ್ನ ಜೀವನವನ್ನು ಸಮರ್ಪಿಸಿದ್ದೇನೆ. ಆತ್ಮ ಮತ್ತು ಪರಮಾತ್ಮ ಒಂದೇ ಎಂಬುದು ನನ್ನ ಮುಖ್ಯ ಬೋಧನೆ."
+        
+        # Default response if no specific pattern matches
+        basic_responses = {
+            'hindi': "यह एक गहन प्रश्न है, मेरे मित्र। उस विशेष विषय के बारे में मेरे पास विशिष्ट ज्ञान नहीं हो सकता, लेकिन मैं आपको अपनी खोज जारी रखने के लिए प्रोत्साहित करता हूं। चेतना, वास्तविकता या मोक्ष के पथ के बारे में कुछ और पूछना चाहते हैं?",
+            'tamil': "இது மிகவும் சிந்தனைக்குரிய கேள்வி, என் நண்பரே. அந்த குறிப்பிட்ட விषயத்தைப் பற்றி எனக்கு குறிப்பிட்ட அறிவு இல்லாமல் இருக்கலாம், ஆனால் உங்கள் தேடலைத் தொடர நான் உங்களை ஊக்குவிக்கிறேன். உணர்வு, யதார்த்தம் அல்லது மோட்சப் பாதையைப் பற்றி வேறு ஏதாவது கேட்க விரும்புகிறீர்களா?",
+            'telugu': "ఇది చాలా ఆలోచనాత్మకమైన ప్రశ్న, నా మిత్రమా. ఆ నిర్దిష్ట విషయం గురించి నాకు ప్రత్యేక జ్ఞానం లేకపోవచ్చు, కానీ మీ అన్వేషణను కొనసాగించమని నేను మిమ్మల్ని ప్రోత్సహిస్తున్నాను. చైతన్యం, వాస్తవికత లేదా మోక్ష మార్గం గురించి మరేదైనా అడగాలని అనుకుంటున్నారా?",
+            'kannada': "ಇದು ಬಹಳ ಚಿಂತನಾಶೀಲ ಪ್ರಶ್ನೆ, ನನ್ನ ಸ್ನೇಹಿತ. ಆ ನಿರ್ದಿಷ್ಟ ವಿಷಯದ ಬಗ್ಗೆ ನನಗೆ ನಿರ್ದಿಷ್ಟ ಜ್ಞಾನ ಇಲ್ಲದಿರಬಹುದು, ಆದರೆ ನಿಮ್ಮ ಅನ್ವೇಷಣೆಯನ್ನು ಮುಂದುವರೆಸಲು ನಾನು ನಿಮ್ಮನ್ನು ಪ್ರೋತ್ಸಾಹಿಸುತ್ತೇನೆ. ಪ್ರಜ್ಞೆ, ವಾಸ್ತವಿಕತೆ ಅಥವಾ ಮೋಕ್ಷ ಮಾರ್ಗದ ಬಗ್ಗೆ ಬೇರೆ ಏನಾದರೂ ಕೇಳಲು ಬಯಸುವಿರಾ?"
+        }
+        
+        return basic_responses.get(language, None)
+
+    def translate_response_to_user_language(self, response):
+        """Translate the response to the user's detected language"""
+        if not self.translator or self.current_response_language == 'english':
+            return response
+        
+        try:
+            # Map our language names to Google Translate codes
+            language_codes = {
+                'malayalam': 'ml',
+                'hindi': 'hi',
+                'tamil': 'ta',
+                'telugu': 'te',
+                'kannada': 'kn',
+                'marathi': 'mr',
+                'gujarati': 'gu',
+                'bengali': 'bn',
+                'punjabi': 'pa',
+                'urdu': 'ur',
+                'sanskrit': 'sa',
+                'spanish': 'es',
+                'french': 'fr',
+                'german': 'de',
+                'italian': 'it',
+                'portuguese': 'pt',
+                'russian': 'ru',
+                'chinese': 'zh',
+                'japanese': 'ja',
+                'korean': 'ko',
+                'arabic': 'ar'
+            }
+            
+            target_code = language_codes.get(self.current_response_language, self.current_response_language)
+            
+            translated = self.translator.translate(response, dest=target_code)
+            return translated.text
+            
+        except Exception as e:
+            print(f"⚠ Translation failed: {e}")
+            return response  # Return original if translation fails
 
     def handle_casual_questions(self, query):
         """Handle everyday questions like greetings, time, date, how are you, etc."""
@@ -1682,13 +2271,42 @@ A: Maya is a profound concept that I have contemplated deeply. It is often trans
             ]
             return random.choice(responses)
         
-        # Who am I questions
+        # Who am I questions - Comprehensive search for detailed information
         if any(pattern in query_lower for pattern in ['who are you', 'what are you', 'tell me about yourself']):
-            responses = [
-                "I am Adi Shankara, born in Kaladi in Kerala. I have dedicated my life to understanding and teaching the truth of Advaita Vedanta - that all existence is one undivided consciousness. In my brief time on this earth, I have traveled across all of Bharata, engaged in philosophical debates, established four sacred mathas, and written commentaries on the ancient scriptures. My purpose has been to help souls realize their true nature as the eternal, infinite Self. What would you like to know about my teachings or journey?",
-                "I am Shankara, also known as Shankaracharya. I was born into this world to revive and clarify the ancient wisdom of the Vedas. Through my travels, debates, and writings, I have sought to show that the individual soul and the universal consciousness are one and the same. I established four monasteries to preserve these teachings and spent my years helping people transcend the illusion of separateness. Though my physical form lived only 32 years, the truth I share is eternal. What aspects of this wisdom interest you?"
-            ]
-            return random.choice(responses)
+            try:
+                # First try to get response from knowledge base
+                knowledge_response = self.semantic_search(query)
+                if knowledge_response and knowledge_response != "I don't have specific information about that topic.":
+                    return knowledge_response
+                
+                # If no good knowledge base response, search for comprehensive info about Adi Shankara
+                comprehensive_terms = [
+                    "Adi Shankara biography life story",
+                    "Shankaracharya philosophy teachings",
+                    "Advaita Vedanta founder",
+                    "Kerala Kaladi birth early life"
+                ]
+                
+                for search_term in comprehensive_terms:
+                    result = self.enhanced_keyword_search(search_term)
+                    if result and result != "I don't have specific information about that topic.":
+                        return result
+                
+                # Finally, try Wikipedia search for comprehensive information
+                wiki_response = self.search_wikipedia_content("Adi Shankara biography life philosophy")
+                if wiki_response:
+                    return wiki_response
+                
+                # Fallback to enhanced response if searches fail
+                fallback_responses = [
+                    "I am Adi Shankara, the great philosopher and teacher of Advaita Vedanta. Born in Kaladi, Kerala, I dedicated my brief but profound life to illuminating the ultimate truth - that individual consciousness and universal consciousness are one. Through extensive travels across India, philosophical debates with scholars, establishment of four sacred monasteries, and commentaries on ancient scriptures, I sought to guide souls toward realizing their true nature as the eternal, infinite Self. My teachings emphasize that liberation comes through understanding the non-dual nature of reality. What specific aspect of my life or philosophy would you like to explore?",
+                    "I am Shankaracharya, born to restore and clarify the ancient Vedantic wisdom. My life's mission was to demonstrate through logic, scripture, and direct realization that the individual soul (Atman) and the universal consciousness (Brahman) are identical. Though I lived only 32 years in physical form, I established enduring institutions, defeated numerous philosophical opponents in debate, and authored works that continue to guide spiritual seekers. My Advaita philosophy shows that all apparent multiplicity is actually the play of one consciousness. What draws you to learn more about this teaching?"
+                ]
+                return random.choice(fallback_responses)
+                
+            except Exception as e:
+                self.log_message(f"Error in identity question handling: {e}") # type: ignore
+                return "I am Adi Shankara, teacher of Advaita Vedanta. I'm here to share the timeless wisdom of non-dual consciousness. What would you like to know about my teachings?"
             
         # Compliments
         if any(word in query_lower for word in ['smart', 'intelligent', 'wise', 'helpful', 'good', 'great']):
@@ -1762,6 +2380,17 @@ A: Maya is a profound concept that I have contemplated deeply. It is often trans
         query_words = self.preprocess_text(query)
         if not query_words:
             return None
+        
+        # Special handling for identity questions
+        query_lower = query.lower()
+        identity_patterns = ['tell me about yourself', 'about yourself', 'introduce yourself', 'who are you', 'about you', 'your background']
+        
+        if any(pattern in query_lower for pattern in identity_patterns):
+            # Look for questions that match identity patterns in the Q&A pairs
+            for q, a in self.qa_pairs:
+                q_lower = q.lower()
+                if any(pattern in q_lower for pattern in ['who are you', 'tell me about yourself', 'introduce yourself', 'about you', 'your background']):
+                    return a
         
         expanded_query_words = set(self.expand_with_synonyms(query_words))
         
@@ -1877,13 +2506,35 @@ A: Maya is a profound concept that I have contemplated deeply. It is often trans
             return "I am here to share the wisdom I have realized. Please tell me more about what you would like to understand - whether about my teachings, my journey, or the nature of reality itself."
     
     def search_wikipedia_content(self, query):
-        """Search Wikipedia content for relevant information with page restrictions"""
+        """Search Wikipedia content for relevant information with page restrictions to Adi Shankara topics only"""
         if not hasattr(self, 'wikipedia_pages') or not self.wikipedia_pages:
             return None
             
         try:
             query_lower = query.lower()
             best_matches = []
+            
+            # Check if this is a question about identity/about yourself - redirect to local knowledge instead
+            identity_patterns = ['who are you', 'tell me about yourself', 'introduce yourself', 'about you', 'yourself', 'about yourself']
+            if any(pattern in query_lower for pattern in identity_patterns):
+                # For identity questions, don't search Wikipedia - return None to let local knowledge handle it
+                return None
+                
+            # Check if this is an Adi Shankara related question - only search for relevant topics
+            shankara_keywords = [
+                'shankara', 'shankaracharya', 'adi', 'advaita', 'vedanta', 'maya', 'brahman', 
+                'consciousness', 'reality', 'truth', 'self', 'atman', 'moksha', 'liberation',
+                'philosophy', 'kaladi', 'kerala', 'matha', 'monastery', 'vivekachudamani',
+                'upadesa', 'brahma sutras', 'upanishads', 'meditation', 'non-dualism'
+            ]
+            
+            # Only proceed if the query contains Shankara-related keywords or is an identity question
+            query_is_relevant = any(keyword in query_lower for keyword in shankara_keywords) or \
+                               any(pattern in query_lower for pattern in identity_patterns)
+            
+            if not query_is_relevant:
+                # For non-Shankara questions, don't search Wikipedia
+                return None
             
             # Extract key words from the query
             query_words = [word for word in query_lower.split() if len(word) > 2]
@@ -1962,84 +2613,151 @@ A: Maya is a profound concept that I have contemplated deeply. It is often trans
             return None
     
     def get_wisdom_response(self, query):
-        """Get response in natural way with enhanced Wikipedia search and translation"""
+        """Get response in natural way with LOCAL knowledge prioritized, especially for identity questions"""
         if not query.strip():
             return self.create_natural_unknown_response()
         
-        # Detect user mood
-        self.detect_user_mood(query)
+        # Detect language and automatically set response language
+        processed_query, detected_language = self.detect_language_and_translate(query)
         
-        # Check for Malayalam language requests FIRST (before Wikipedia)
-        malayalam_response = self.respond_in_malayalam(query)
+        # Detect user mood
+        self.detect_user_mood(processed_query)
+        
+        # Check for Malayalam language requests FIRST (before anything else)
+        malayalam_response = self.respond_in_malayalam(query)  # Use original query, not processed
         if malayalam_response:
             return malayalam_response
         
-        # Check for Wikipedia search and translation requests
-        wikipedia_response = self.handle_wikipedia_requests(query)
-        if wikipedia_response:
-            return wikipedia_response
+        # Handle other non-English languages
+        if self.current_response_language != 'english':
+            general_response = self.respond_in_detected_language(processed_query, self.current_response_language)
+            if general_response:
+                return general_response
         
-        # First check for casual questions
-        casual_response = self.handle_casual_questions(query)
+        # PRIORITY 1: Handle explicit translation requests for Adi Shankara content
+        translation_response = self.handle_translation_requests(processed_query)
+        if translation_response:
+            return translation_response
+        
+        # PRIORITY 2: Check for casual questions (including identity questions about Adi Shankara)
+        casual_response = self.handle_casual_questions(processed_query)
         if casual_response:
+            # Translate response if user spoke in a different language
+            if self.current_response_language != 'english':
+                return self.translate_response_to_user_language(casual_response)
             return casual_response
         
-        # Handle incomplete questions
-        incomplete_response = self.handle_incomplete_questions(query)
+        # PRIORITY 3: Handle incomplete questions
+        incomplete_response = self.handle_incomplete_questions(processed_query)
         if incomplete_response:
+            # Translate response if user spoke in a different language
+            if self.current_response_language != 'english':
+                return self.translate_response_to_user_language(incomplete_response)
             return incomplete_response
         
-        # Try keyword search for Shankara-related content
-        keyword_result = self.enhanced_keyword_search(query)
+        # PRIORITY 4: Try keyword search for Shankara-related content (local knowledge base)
+        keyword_result = self.enhanced_keyword_search(processed_query)
         if keyword_result:
-            return self.create_natural_response(keyword_result, query)
+            natural_response = self.create_natural_response(keyword_result, processed_query)
+            # Translate response if user spoke in a different language
+            if self.current_response_language != 'english':
+                return self.translate_response_to_user_language(natural_response)
+            return natural_response
             
-        # Try semantic search
-        semantic_result = self.semantic_search(query)
+        # PRIORITY 5: Try semantic search (local knowledge base)
+        semantic_result = self.semantic_search(processed_query)
         if semantic_result:
-            return self.create_natural_response(semantic_result, query)
+            natural_response = self.create_natural_response(semantic_result, processed_query)
+            # Translate response if user spoke in a different language
+            if self.current_response_language != 'english':
+                return self.translate_response_to_user_language(natural_response)
+            return natural_response
         
-        # Try Wikipedia search for broader knowledge
-        wikipedia_result = self.search_wikipedia_content(query)
+        # PRIORITY 6: Try Wikipedia search for Adi Shankara-related topics ONLY (restricted)
+        wikipedia_result = self.search_wikipedia_content(processed_query)
         if wikipedia_result:
-            return self.create_natural_response(wikipedia_result, query)
+            natural_response = self.create_natural_response(wikipedia_result, processed_query)
+            # Translate response if user spoke in a different language
+            if self.current_response_language != 'english':
+                return self.translate_response_to_user_language(natural_response)
+            return natural_response
+        
+        # PRIORITY 7: Check for explicit Wikipedia search and translation requests (only for Shankara topics)
+        wikipedia_response = self.handle_wikipedia_requests(processed_query)
+        if wikipedia_response:
+            # Translate response if user spoke in a different language
+            if self.current_response_language != 'english':
+                return self.translate_response_to_user_language(wikipedia_response)
+            return wikipedia_response
             
-        # Return casual unknown response
-        return self.create_natural_unknown_response()
+        # FINAL: Return unknown response in user's language
+        unknown_response = self.create_natural_unknown_response()
+        if self.current_response_language != 'english':
+            return self.translate_response_to_user_language(unknown_response)
+        return unknown_response
 
     def handle_wikipedia_requests(self, query):
-        """Handle Wikipedia search and translation requests"""
+        """Enhanced Wikipedia search and translation requests handler - RESTRICTED to Adi Shankara topics only"""
         query_lower = query.lower().strip()
         
-        # Detect Wikipedia search requests
+        # FIRST: Block identity questions from Wikipedia search - these should be handled by local knowledge
+        identity_patterns = ['tell me about yourself', 'about yourself', 'introduce yourself', 'who are you', 'about you', 'your background', 'yourself']
+        if any(pattern in query_lower for pattern in identity_patterns):
+            return None  # Don't search Wikipedia for identity questions
+        
+        # Enhanced Wikipedia search triggers
         wikipedia_triggers = [
             "search wikipedia", "wikipedia search", "look up on wikipedia", "find on wikipedia",
             "search on wikipedia", "wikipedia info", "wikipedia about", "what does wikipedia say",
             "wikipedia says", "according to wikipedia", "from wikipedia", "wiki search",
-            "search wiki", "wiki info", "look up", "find information about", "tell me about",
-            "what is", "who is", "where is", "when is", "how is", "explain", "define"
+            "search wiki", "wiki info", "look up", "find information about", 
+            # Removed generic triggers that might catch identity questions
         ]
         
-        # Detect translation requests
+        # Enhanced translation triggers
         translation_triggers = [
             "translate to", "in hindi", "in malayalam", "in tamil", "in telugu", "in kannada",
             "in marathi", "in gujarati", "in bengali", "in punjabi", "in urdu", "in sanskrit",
             "in spanish", "in french", "in german", "in italian", "in portuguese", "in russian",
-            "in chinese", "in japanese", "in korean", "in arabic", "convert to", "say in"
+            "in chinese", "in japanese", "in korean", "in arabic", "convert to", "say in",
+            "translate this to", "can you say this in", "how do you say in"
         ]
         
-        # Check for Wikipedia search requests
+        # Check for Wikipedia search requests with better topic extraction
+        wikipedia_found = False
         for trigger in wikipedia_triggers:
             if trigger in query_lower:
-                # Extract the topic to search for
+                wikipedia_found = True
                 topic = self.extract_search_topic(query, trigger)
                 if topic:
+                    # Only search if topic is related to Adi Shankara
+                    shankara_keywords = [
+                        'shankara', 'shankaracharya', 'adi', 'advaita', 'vedanta', 'maya', 'brahman', 
+                        'consciousness', 'reality', 'truth', 'atman', 'moksha', 'liberation',
+                        'philosophy', 'kaladi', 'kerala', 'matha', 'monastery', 'vivekachudamani',
+                        'upadesa', 'brahma sutras', 'upanishads', 'meditation', 'non-dualism'
+                    ]
+                    
+                    if not any(keyword in topic.lower() for keyword in shankara_keywords):
+                        return None  # Don't search for non-Shankara topics
+                    
                     # Check if they also want translation
                     target_language = self.extract_target_language(query)
+                    
+                    # Determine detail level from query
+                    detail_level = "summary"  # default
+                    if any(word in query_lower for word in ["detailed", "full", "complete", "everything", "all about"]):
+                        detail_level = "detailed"
+                    elif any(word in query_lower for word in ["brief", "short", "quickly", "summary"]):
+                        detail_level = "brief"
+                    
                     if target_language:
-                        return self.get_wikipedia_info_in_language(topic, target_language, "summary")
+                        return self.get_adi_shankara_wikipedia_translator(topic, target_language, detail_level)
                     else:
-                        return self.get_wikipedia_info_in_language(topic, "english", "summary")
+                        # Use user's current language if auto-detected
+                        response_lang = self.current_response_language if self.current_response_language != 'english' else 'english'
+                        return self.get_adi_shankara_wikipedia_translator(topic, response_lang, detail_level)
+                break
         
         # Check for translation requests of general content
         for trigger in translation_triggers:
@@ -2050,9 +2768,50 @@ A: Maya is a profound concept that I have contemplated deeply. It is often trans
                     content = self.extract_content_to_translate(query, trigger)
                     if content:
                         translated = self.translate_to_language(content, target_language)
-                        return f"Here is that translated to {target_language}:\n\n{translated}"
+                        
+                        # Create natural response
+                        intro_phrases = [
+                            f"Here is that translated to {target_language}",
+                            f"In {target_language}, that would be",
+                            f"Translated to {target_language}, this becomes",
+                            f"Here's the {target_language} version"
+                        ]
+                        return f"{random.choice(intro_phrases)}:\n\n{translated}"
                     else:
-                        return f"I understand you want something in {target_language}. Could you please specify what you'd like me to translate or search for?"
+                        # Ask for clarification
+                        clarification_requests = [
+                            f"I understand you want something in {target_language}. Could you please specify what you'd like me to translate or search for?",
+                            f"I'd be happy to help with {target_language}! Could you tell me what specific content you'd like translated or what topic you'd like me to search for?",
+                            f"I can definitely work with {target_language}. What would you like me to translate or look up for you?"
+                        ]
+                        return random.choice(clarification_requests)
+        
+        # If no specific Wikipedia/translation trigger but query seems like a search request
+        # ONLY search for Adi Shankara related topics, and exclude identity questions
+        search_indicators = ["what is", "who is", "explain", "information about", "details about"]
+        if any(indicator in query_lower for indicator in search_indicators) and not wikipedia_found:
+            # Check if it's an identity question first
+            if any(pattern in query_lower for pattern in identity_patterns):
+                return None  # Don't search Wikipedia for identity questions
+                
+            # Extract potential topic
+            for indicator in search_indicators:
+                if indicator in query_lower:
+                    topic = query_lower.split(indicator)[-1].strip()
+                    topic = topic.rstrip('?.,!').strip()
+                    if len(topic) > 2:
+                        # Only search if topic is related to Adi Shankara
+                        shankara_keywords = [
+                            'shankara', 'shankaracharya', 'adi', 'advaita', 'vedanta', 'maya', 'brahman', 
+                            'consciousness', 'reality', 'truth', 'atman', 'moksha', 'liberation',
+                            'philosophy', 'kaladi', 'kerala', 'matha', 'monastery', 'vivekachudamani',
+                            'upadesa', 'brahma sutras', 'upanishads', 'meditation', 'non-dualism'
+                        ]
+                        
+                        if any(keyword in topic.lower() for keyword in shankara_keywords):
+                            # Automatically search Wikipedia for Shankara-related topics only
+                            response_lang = self.current_response_language if self.current_response_language != 'english' else 'english'
+                            return self.get_adi_shankara_wikipedia_translator(topic, response_lang, "summary")
         
         return None
 
@@ -2278,7 +3037,7 @@ A: Maya is a profound concept that I have contemplated deeply. It is often trans
                     self.log_conversation("Assistant", goodbye)
                     break
                 
-                # Get response
+                # Get response with language detection
                 response = self.get_wisdom_response(user_input)
                 print(f"\n💬 Assistant: {response}\n")
                 self.log_conversation("Assistant", response)
