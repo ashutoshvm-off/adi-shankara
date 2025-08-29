@@ -207,24 +207,10 @@
       "created_date": "2025-08-12T10:17:04.006401",
       "usage_count": 0,
       "last_used": null
-    },
-    {
-      "id": "identity_5_27ab6794",
-      "question": "about yourself",
-      "answer": "I am here to share the wisdom I have realized. Please tell me more about what you would like to understand - whether about my teachings, my journey, or the nature of reality itself.",
-      "keywords": [
-        "yourself"
-      ],
-      "category": "identity",
-      "source": "incomplete_questions",
-      "confidence": 0.7999999999999999,
-      "created_date": "2025-08-12T10:28:28.007880",
-      "usage_count": 0,
-      "last_used": null
     }
   ],
   "metadata": {
-    "last_updated": "2025-08-12T10:28:28.007880",
-    "total_entries": 17
+    "last_updated": "2025-08-12T10:17:04.009953",
+    "total_entries": 16
   }
 }

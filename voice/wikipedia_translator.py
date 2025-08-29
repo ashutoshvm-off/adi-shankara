@@ -175,16 +175,26 @@ class WikipediaTranslator:
             return None
 
     def translate_content(self, content, target_language):
-        """Translate content to target language with error handling"""
+        """Translate content to target language with enhanced error handling and Malayalam accuracy"""
         if not self.translator:
             return f"Translation service unavailable. Original content: {content}"
         
+        if not content or not content.strip():
+            return "No content to translate."
+        
         try:
-            target_code = self.language_codes.get(target_language.lower(), target_language)
+            # Safe target language handling
+            target_language = target_language or 'english'
+            target_code = self.language_codes.get(target_language.lower(), target_language.lower())
             
-            # Ensure target_code is not None
-            if not target_code:
+            # Ensure target_code is not None and is a valid string
+            if not target_code or not isinstance(target_code, str):
                 target_code = 'en'  # fallback to English
+            
+            # Special handling for Malayalam to improve accuracy
+            if target_language.lower() in ['malayalam', 'ml']:
+                # Pre-processing for better Malayalam translation
+                content = self._preprocess_for_malayalam(content)
             
             # Handle long content by splitting into chunks
             if len(content) > 4000:
@@ -329,6 +339,47 @@ class WikipediaTranslator:
         topic = topic.strip('?.,!').strip()
         
         return topic if len(topic) > 1 else None
+
+    def _preprocess_for_malayalam(self, content):
+        """Preprocess content for better Malayalam translation accuracy"""
+        try:
+            # Split into smaller, more manageable sentences for better translation
+            sentences = content.split('. ')
+            
+            # Process each sentence to improve translation quality
+            processed_sentences = []
+            for sentence in sentences:
+                if len(sentence.strip()) > 0:
+                    # Remove excessive technical jargon that might confuse translation
+                    processed_sentence = self._simplify_for_translation(sentence)
+                    processed_sentences.append(processed_sentence)
+            
+            return '. '.join(processed_sentences)
+            
+        except Exception as e:
+            logger.warning(f"Malayalam preprocessing failed: {e}")
+            return content  # Return original if preprocessing fails
+    
+    def _simplify_for_translation(self, text):
+        """Simplify text for better translation accuracy"""
+        try:
+            # Replace complex terms with simpler alternatives
+            replacements = {
+                'philosophical': 'spiritual',
+                'metaphysical': 'spiritual',
+                'epistemological': 'knowledge-related',
+                'ontological': 'existence-related',
+                'phenomenological': 'experience-related'
+            }
+            
+            simplified = text
+            for complex_term, simple_term in replacements.items():
+                simplified = simplified.replace(complex_term, simple_term)
+            
+            return simplified
+            
+        except Exception:
+            return text  # Return original if simplification fails
 
 def main():
     """Demo function"""
