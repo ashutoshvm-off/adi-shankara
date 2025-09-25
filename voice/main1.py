@@ -99,6 +99,7 @@ logger = logging.getLogger(__name__)
 # === Auto-install required packages ===
 required = {
     "speech_recognition": "SpeechRecognition",
+    "pyaudio": "pyaudio",  # Required for microphone input with SpeechRecognition
     "pyttsx3": "pyttsx3",
     "googletrans": "googletrans==4.0.0rc1",
     "gtts": "gTTS",
@@ -108,7 +109,7 @@ required = {
     "wikipedia": "wikipedia"
     # Note: TTS (Coqui) removed from auto-install due to long installation time and build requirements
     # Install manually with: pip install TTS (requires Visual C++ Build Tools)
-    # Note: torch, sentence-transformers, sounddevice, scipy, pyaudio, aiofiles are optional
+    # Note: torch, sentence-transformers, sounddevice, scipy, aiofiles are optional
 }
 
 def check_package_status():
@@ -506,8 +507,14 @@ class NaturalShankaraAssistant:
                 else:
                     print("⚠ Microphone is not available.")
                 
+            except ImportError as import_error:
+                print(f"⚠ PyAudio not found: {import_error}")
+                print("🔧 Try installing PyAudio: pip install pyaudio")
+                self.recognizer = None
+                self.microphone = None
             except Exception as e:
-                print(f"⚠ Having some mic issues: {e}")
+                print(f"⚠ Speech recognition setup failed: {e}")
+                print("💡 This might be due to missing PyAudio or microphone issues")
                 self.recognizer = None
                 self.microphone = None
         
@@ -516,11 +523,40 @@ class NaturalShankaraAssistant:
         if PYTTSX3_AVAILABLE and pyttsx3 is not None:
             try:
                 self.tts_engine = pyttsx3.init()
+                
+                # Test that the engine actually works
+                voices = self.tts_engine.getProperty('voices')
+                if voices:
+                    try:
+                        # Try to get voice count safely
+                        if hasattr(voices, '__len__'):
+                            voice_count = len(voices)  # type: ignore
+                            print(f"✓ Found {voice_count} TTS voices available")
+                        elif hasattr(voices, '__iter__'):
+                            voice_count = sum(1 for _ in voices)  # type: ignore
+                            print(f"✓ Found {voice_count} TTS voices available")
+                        else:
+                            print("✓ TTS voices available")
+                    except Exception:
+                        print("✓ TTS voices available (count unknown)")
+                else:
+                    print("⚠ No TTS voices found - audio may not work")
+                
                 self.setup_enhanced_voice()
-                print("✓ Voice system is working!")
+                
+                # Quick functionality test
+                try:
+                    self.tts_engine.say("Testing")
+                    self.tts_engine.runAndWait()
+                    print("✓ Voice system is working and tested!")
+                except Exception as test_error:
+                    print(f"⚠ Voice system initialized but test failed: {test_error}")
+                    
             except Exception as e:
                 print(f"⚠ Having some voice issues: {e}")
                 self.tts_engine = None
+        else:
+            self.tts_engine = None
 
         # Translator
         self.translator = None
@@ -581,6 +617,9 @@ class NaturalShankaraAssistant:
         print("\n" + "="*50)
         print("🎯 Ready to chat! Let's begin...")
         print("="*50 + "\n")
+        
+        # Small delay to ensure everything is loaded
+        time.sleep(0.5)
     
     def setup_wikipedia_rag(self):
         """Setup Wikipedia RAG for enhanced knowledge about Adi Shankara with page restrictions"""
@@ -591,6 +630,7 @@ class NaturalShankaraAssistant:
         try:
             print("📚 Loading Wikipedia content about Adi Shankara...")
             wikipedia.set_lang("en")
+            wikipedia.set_rate_limiting(True)  # Enable rate limiting to prevent timeouts
             
             # Restricted list of allowed pages for Adi Shankara context
             allowed_pages = [
@@ -616,9 +656,11 @@ class NaturalShankaraAssistant:
             
             # Load content from allowed pages only
             pages_loaded = 0
-            for page_title in allowed_pages:
+            total_pages = len(allowed_pages)
+            for i, page_title in enumerate(allowed_pages, 1):
                 try:
-                    page = wikipedia.page(page_title)
+                    print(f"📖 Loading {i}/{total_pages}: {page_title}...")
+                    page = wikipedia.page(page_title, auto_suggest=False)  # Disable auto-suggest to prevent hanging
                     content = page.content[:3000]  # Limit content to prevent overwhelming
                     summary = page.summary[:300]
                     
@@ -828,17 +870,22 @@ class NaturalShankaraAssistant:
     def play_audio_file_windows(self, filepath):
         """Play audio file on Windows with multiple fallback methods"""
         try:
+            print(f"🔊 Playing audio file: {os.path.basename(filepath)}")
+            
             # Method 1: Try pygame
             try:
                 import pygame
+                print("   Trying pygame...")
                 pygame.mixer.init(frequency=22050, size=-16, channels=2, buffer=1024)
                 pygame.mixer.music.load(filepath)
                 pygame.mixer.music.play()
                 while pygame.mixer.music.get_busy():
                     time.sleep(0.1)
                 pygame.mixer.quit()
+                print("   ✓ pygame playback successful")
                 return True
-            except (ImportError, Exception):
+            except (ImportError, Exception) as e:
+                print(f"   ⚠ pygame failed: {e}")
                 pass
             
             # Method 2: Try Windows Media Player via PowerShell
@@ -865,12 +912,15 @@ class NaturalShankaraAssistant:
             
             # Method 4: Simple start command
             try:
+                print("   Trying system start command...")
                 os.system(f'start /min "" "{filepath}"')
                 time.sleep(3)  # Give it time to play
+                print("   ✓ system start command completed")
                 return True
             except Exception:
                 pass
                 
+            print("   ❌ All audio playback methods failed")
             return False
             
         except Exception as e:
@@ -1105,14 +1155,27 @@ A: My background is rooted in the ancient tradition of Sanatana Dharma. I was bo
         
         try:
             with self.microphone as source:
-                print("🎧 Listening... (speak naturally)")
+                print("🎧 Microphone activated - Listening... (speak naturally)")
+                
+                # Adjust for ambient noise quickly
+                print("🔇 Adjusting for background noise...")
+                self.recognizer.adjust_for_ambient_noise(source, duration=1)
+                print("✓ Ready! Speak now...")
                 
                 # Listen for audio
-                audio = self.recognizer.listen(
-                    source, 
-                    timeout=timeout, 
-                    phrase_time_limit=phrase_time_limit
-                )
+                try:
+                    audio = self.recognizer.listen(
+                        source, 
+                        timeout=timeout, 
+                        phrase_time_limit=phrase_time_limit
+                    )
+                    print("🔇 Microphone deactivated - Processing speech...")
+                except Exception as timeout_error:
+                    if 'timeout' in str(timeout_error).lower():
+                        print("🔇 Microphone deactivated - No speech detected")
+                        return ""
+                    else:
+                        raise timeout_error
             # Try Google Speech Recognition first
             try:
                 if hasattr(self.recognizer, 'recognize_google'):
@@ -1123,7 +1186,17 @@ A: My background is rooted in the ancient tradition of Sanatana Dharma. I was bo
                     return input("Please type your message: ").strip()
             except Exception as e1:
                 if sr is not None and hasattr(sr, 'UnknownValueError') and isinstance(e1, sr.UnknownValueError):
-                    print("🤔 Didn't quite catch that. Could you try again?")
+                    responses = [
+                        "I didn't quite catch that. Could you speak a bit more clearly?",
+                        "Sorry, I couldn't understand what you said. Mind trying again?", 
+                        "Hmm, the audio wasn't clear enough. Could you repeat that please?",
+                        "I'm having trouble understanding. Could you speak a little louder or slower?"
+                    ]
+                    import random
+                    chosen_response = random.choice(responses)
+                    print(f"💭 {chosen_response}")
+                    # Actually speak the clarification request
+                    self.speak_with_enhanced_quality(chosen_response, pause_before=0.2, pause_after=0.5)
                     return ""
                 elif sr is not None and hasattr(sr, 'RequestError') and isinstance(e1, sr.RequestError):
                     # Fallback to other recognition methods
@@ -1138,7 +1211,15 @@ A: My background is rooted in the ancient tradition of Sanatana Dharma. I was bo
                         print("🎤 Having trouble with speech recognition. Let me try text input instead.")
                         return input("Please type your message: ").strip()
                 else:
-                    print("🤔 Didn't quite catch that. Could you try again?")
+                    responses = [
+                        "I didn't quite catch that. Could you try speaking again?",
+                        "Sorry, could you repeat that? I didn't understand clearly.",
+                        "I'm having trouble hearing you. Could you try once more?"
+                    ]
+                    import random
+                    chosen_response = random.choice(responses)
+                    print(f"💭 {chosen_response}")
+                    self.speak_with_enhanced_quality(chosen_response, pause_before=0.2, pause_after=0.5)
                     return ""
                     
         except Exception as e:
@@ -1277,6 +1358,56 @@ A: My background is rooted in the ancient tradition of Sanatana Dharma. I was bo
         print(f"\n💬 Assistant: {text}\n")
         self.log_conversation("Assistant", text)
         
+        # Debug: Show which TTS engines are available
+        print("🔊 Attempting to speak using available TTS engines...")
+        
+        # Quick Windows SAPI test first (most reliable on Windows)
+        if os.name == 'nt' and not is_malayalam:
+            try:
+                print("🎤 Trying Windows SAPI with male voice...")
+                import win32com.client
+                
+                # Create enhanced text for speech
+                enhanced_text = self.enhance_text_for_speech(text) if not is_malayalam else text
+                
+                speaker = win32com.client.Dispatch("SAPI.SpVoice")
+                
+                # Try to select a male voice (David or similar)
+                voices = speaker.GetVoices()
+                male_voice_found = False
+                
+                for i in range(voices.Count):
+                    voice = voices.Item(i)
+                    voice_name = voice.GetDescription()
+                    print(f"   Available voice: {voice_name}")
+                    
+                    # Look for male voices - prioritize David or deep voices
+                    if any(name in voice_name.lower() for name in ['david', 'male', 'man']):
+                        speaker.Voice = voice
+                        male_voice_found = True
+                        print(f"✅ Selected male voice: {voice_name}")
+                        break
+                
+                if not male_voice_found:
+                    # Fallback to first available voice
+                    if voices.Count > 0:
+                        speaker.Voice = voices.Item(0)
+                        print(f"✅ Using default voice: {voices.Item(0).GetDescription()}")
+                
+                # Configure speech settings for spiritual/meditative tone
+                speaker.Rate = 2  # Slower, more contemplative (SAPI scale: -10 to 10)
+                speaker.Volume = 100  # Full volume
+                
+                print("🔊 Speaking with spiritual tone...")
+                speaker.Speak(enhanced_text)
+                print("✓ Windows SAPI speech completed")
+                if pause_after > 0:
+                    time.sleep(pause_after)
+                return
+                
+            except Exception as sapi_error:
+                print(f"⚠ Windows SAPI failed: {sapi_error}")
+        
         # For Malayalam text, use Google TTS with Malayalam language
         if is_malayalam and GTTS_AVAILABLE and gTTS is not None:
             try:
@@ -1304,19 +1435,18 @@ A: My background is rooted in the ancient tradition of Sanatana Dharma. I was bo
                     success = False
                     if os.name == 'nt':  # Windows
                         success = self.play_audio_file_windows(temp_file)
-                                    
                     elif sys.platform == 'darwin':  # macOS
-                        try:
-                            os.system(f'afplay "{temp_file}"')
+                        result = os.system(f'afplay "{temp_file}"')
+                        if result == 0:
                             success = True
-                        except Exception:
-                            pass
+                        else:
+                            print(f"⚠ macOS audio playback returned: {result}")
                     else:  # Linux
-                        try:
-                            os.system(f'mpg123 "{temp_file}" 2>/dev/null || mplayer "{temp_file}" 2>/dev/null')
+                        result = os.system(f'mpg123 "{temp_file}" 2>/dev/null || mplayer "{temp_file}" 2>/dev/null')
+                        if result == 0:
                             success = True
-                        except Exception:
-                            pass
+                        else:
+                            print(f"⚠ Linux audio playback returned: {result}")
                     
                     if success:
                         if pause_after > 0:
@@ -1356,28 +1486,169 @@ A: My background is rooted in the ancient tradition of Sanatana Dharma. I was bo
         # Try Edge TTS first (high quality) - only for English
         if not is_malayalam and EDGE_TTS_AVAILABLE and asyncio is not None:
             try:
+                print("🎤 Using Edge TTS...")
                 loop = asyncio.new_event_loop()
                 asyncio.set_event_loop(loop)
                 success = loop.run_until_complete(self.edge_tts_speak_async(enhanced_text))
                 loop.close()
                 
                 if success:
+                    print("✓ Edge TTS speech completed")
                     if pause_after > 0:
                         time.sleep(pause_after)
                     return
+                else:
+                    print("⚠ Edge TTS returned False, trying next method...")
                     
             except Exception as e:
-                print(f"⚠ Edge TTS failed: {e}")
+                print(f"⚠ Edge TTS failed: {e}, trying next method...")
+        
+        #        # Try Azure Speech Service (if available)
+        if not is_malayalam:
+            try:
+                print("🎤 Trying Azure Speech Service...")
+                # Check if azure-cognitiveservices-speech is available
+                if 'speechsdk' in globals():
+                    # Configure Azure Speech (you would need to set API key)
+                    # For now, this is a placeholder for potential future enhancement
+                    print("⚠ Azure Speech requires API key configuration")
+                else:
+                    print("⚠ Azure Speech Service not available (package not installed)")
+                
+            except Exception as azure_error:
+                print(f"⚠ Azure Speech failed: {azure_error}")
+
+        # Try eSpeak (lightweight, fast)
+        if not is_malayalam:
+            try:
+                print("🎤 Trying eSpeak...")
+                import subprocess
+                
+                # Configure eSpeak for slower, more spiritual speech
+                espeak_command = [
+                    "espeak",
+                    "-s", "140",  # Speed (words per minute)
+                    "-p", "30",   # Pitch (lower for more masculine)
+                    "-a", "100",  # Amplitude (volume)
+                    "-v", "en+m3", # Male voice variant
+                    enhanced_text
+                ]
+                
+                result = subprocess.run(espeak_command, capture_output=True, timeout=30)
+                if result.returncode == 0:
+                    print("✓ eSpeak speech completed")
+                    if pause_after > 0:
+                        time.sleep(pause_after)
+                    return
+                else:
+                    print("⚠ eSpeak returned error")
+                    
+            except (ImportError, FileNotFoundError):
+                print("⚠ eSpeak not available (not installed on system)")
+            except Exception as espeak_error:
+                print(f"⚠ eSpeak failed: {espeak_error}")
+        
+        # Try Festival (alternative Linux/Windows TTS)
+        if not is_malayalam:
+            try:
+                print("🎤 Trying Festival...")
+                import subprocess
+                
+                # Use Festival with text input
+                festival_command = ["festival", "--tts"]
+                process = subprocess.Popen(festival_command, stdin=subprocess.PIPE, 
+                                        stdout=subprocess.PIPE, stderr=subprocess.PIPE, 
+                                        text=True)
+                stdout, stderr = process.communicate(input=enhanced_text, timeout=30)
+                
+                if process.returncode == 0:
+                    print("✓ Festival speech completed")
+                    if pause_after > 0:
+                        time.sleep(pause_after)
+                    return
+                else:
+                    print("⚠ Festival returned error")
+                    
+            except (ImportError, FileNotFoundError):
+                print("⚠ Festival not available (not installed on system)")
+            except Exception as festival_error:
+                print(f"⚠ Festival failed: {festival_error}")
         
         # Try pyttsx3 (medium quality) - only for English
         if not is_malayalam and self.tts_engine:
             try:
-                self.tts_engine.stop()  # Stop any ongoing speech
+                print("🎤 Using pyttsx3...")
+                
+                # Force stop any ongoing speech
+                try:
+                    self.tts_engine.stop()
+                except:
+                    pass
+                
+                # Re-initialize if needed
+                try:
+                    # Configure for better audio output with more aggressive settings
+                    self.tts_engine.setProperty('volume', 1.0)  # Maximum volume
+                    self.tts_engine.setProperty('rate', 150)    # Fixed rate for clarity
+                    
+                    # Get available voices and use the first working one
+                    voices = self.tts_engine.getProperty('voices')
+                    if voices:
+                        try:
+                            if hasattr(voices, '__len__') and len(voices) > 0:  # type: ignore
+                                self.tts_engine.setProperty('voice', voices[0].id)  # type: ignore
+                            elif hasattr(voices, '__iter__'):
+                                first_voice = next(iter(voices), None)  # type: ignore
+                                if first_voice:
+                                    self.tts_engine.setProperty('voice', first_voice.id)  # type: ignore
+                        except Exception:
+                            pass  # Use default voice
+                    
+                except Exception as prop_error:
+                    print(f"⚠ TTS property setting failed: {prop_error}")
+                
+                # Try to speak
+                print("🔊 Speaking now...")
                 self.tts_engine.say(enhanced_text)
-                self.tts_engine.runAndWait()
-                if pause_after > 0:
-                    time.sleep(pause_after)
-                return
+                
+                # Force wait for completion with timeout
+                start_time = time.time()
+                timeout = 30  # 30 second timeout
+                
+                try:
+                    self.tts_engine.runAndWait()
+                    print("✓ pyttsx3 speech completed")
+                    
+                    # Add a pause to ensure completion
+                    time.sleep(0.8)
+                    
+                    if pause_after > 0:
+                        time.sleep(pause_after)
+                    return
+                    
+                except Exception as speak_error:
+                    print(f"⚠ pyttsx3 speaking failed: {speak_error}")
+                    # Try alternative approach
+                    try:
+                        # Force stop and reinitialize
+                        self.tts_engine.stop()
+                        time.sleep(0.5)
+                        
+                        # Create new engine instance
+                        import pyttsx3
+                        new_engine = pyttsx3.init()
+                        new_engine.setProperty('volume', 1.0)
+                        new_engine.setProperty('rate', 150)
+                        new_engine.say(enhanced_text)
+                        new_engine.runAndWait()
+                        print("✓ pyttsx3 speech completed (retry)")
+                        
+                        if pause_after > 0:
+                            time.sleep(pause_after)
+                        return
+                        
+                    except Exception as retry_error:
+                        print(f"⚠ pyttsx3 retry also failed: {retry_error}")
                 
             except Exception as e:
                 print(f"⚠ pyttsx3 failed: {e}")
@@ -1385,6 +1656,7 @@ A: My background is rooted in the ancient tradition of Sanatana Dharma. I was bo
         # Try Google TTS (basic quality) - fallback for English or if Malayalam failed
         if GTTS_AVAILABLE and gTTS is not None:
             try:
+                print("🎤 Using Google TTS...")
                 lang_code = 'ml' if is_malayalam else 'en'
                 tts = gTTS(text=text if is_malayalam else enhanced_text, lang=lang_code, slow=False)
                 
@@ -1424,10 +1696,13 @@ A: My background is rooted in the ancient tradition of Sanatana Dharma. I was bo
                             pass
                     
                     if success:
+                        print("✓ Google TTS speech completed")
                         threading.Timer(5.0, lambda: self.cleanup_temp_file(temp_file)).start()
                         if pause_after > 0:
                             time.sleep(pause_after)
                         return
+                    else:
+                        print("⚠ Audio playback failed for Google TTS")
                         
                 except Exception as file_error:
                     print(f"⚠ TTS file handling failed: {file_error}")
@@ -1438,7 +1713,6 @@ A: My background is rooted in the ancient tradition of Sanatana Dharma. I was bo
                             threading.Timer(2.0, lambda: self.cleanup_temp_file(temp_file)).start()
                         except Exception:
                             pass
-                    return
                     
             except Exception as e:
                 print(f"⚠ Google TTS failed: {e}")
@@ -1616,7 +1890,7 @@ A: My background is rooted in the ancient tradition of Sanatana Dharma. I was bo
                 target_lang = language_mapping[target_lang]
             
             # Don't translate if already in target language
-            detection = self.translator.detect(text)
+            detection = self.translator.detect(text) # pyright: ignore[reportAttributeAccessIssue]
             if detection.lang == target_lang:
                 return text
                 
@@ -2271,42 +2545,42 @@ A: My background is rooted in the ancient tradition of Sanatana Dharma. I was bo
             ]
             return random.choice(responses)
         
-        # Who am I questions - Comprehensive search for detailed information
-        if any(pattern in query_lower for pattern in ['who are you', 'what are you', 'tell me about yourself']):
-            try:
-                # First try to get response from knowledge base
-                knowledge_response = self.semantic_search(query)
-                if knowledge_response and knowledge_response != "I don't have specific information about that topic.":
-                    return knowledge_response
+        # Who am I questions - Direct lookup in knowledge base first
+        if any(pattern in query_lower for pattern in ['who are you', 'what are you', 'tell me about yourself', 'introduce yourself', 'about yourself']):
+            print(f"🔍 Identity question detected in casual handler: '{query_lower}'")
+            
+            # DIRECT lookup in Q&A pairs first - this is the most reliable
+            if hasattr(self, 'qa_pairs') and self.qa_pairs:
+                print("✅ Searching directly in Q&A pairs...")
                 
-                # If no good knowledge base response, search for comprehensive info about Adi Shankara
-                comprehensive_terms = [
-                    "Adi Shankara biography life story",
-                    "Shankaracharya philosophy teachings",
-                    "Advaita Vedanta founder",
-                    "Kerala Kaladi birth early life"
-                ]
+                # Look for exact matches first
+                for q, a in self.qa_pairs:
+                    q_lower = q.lower()
+                    if 'tell me about yourself' in query_lower and 'tell me about yourself' in q_lower:
+                        print(f"✅ Found exact 'tell me about yourself' match: {q}")
+                        return a
+                    elif 'who are you' in query_lower and 'who are you' in q_lower:
+                        print(f"✅ Found exact 'who are you' match: {q}")
+                        return a
+                    elif 'introduce yourself' in query_lower and 'introduce yourself' in q_lower:
+                        print(f"✅ Found exact 'introduce yourself' match: {q}")
+                        return a
                 
-                for search_term in comprehensive_terms:
-                    result = self.enhanced_keyword_search(search_term)
-                    if result and result != "I don't have specific information about that topic.":
-                        return result
-                
-                # Finally, try Wikipedia search for comprehensive information
-                wiki_response = self.search_wikipedia_content("Adi Shankara biography life philosophy")
-                if wiki_response:
-                    return wiki_response
-                
-                # Fallback to enhanced response if searches fail
-                fallback_responses = [
-                    "I am Adi Shankara, the great philosopher and teacher of Advaita Vedanta. Born in Kaladi, Kerala, I dedicated my brief but profound life to illuminating the ultimate truth - that individual consciousness and universal consciousness are one. Through extensive travels across India, philosophical debates with scholars, establishment of four sacred monasteries, and commentaries on ancient scriptures, I sought to guide souls toward realizing their true nature as the eternal, infinite Self. My teachings emphasize that liberation comes through understanding the non-dual nature of reality. What specific aspect of my life or philosophy would you like to explore?",
-                    "I am Shankaracharya, born to restore and clarify the ancient Vedantic wisdom. My life's mission was to demonstrate through logic, scripture, and direct realization that the individual soul (Atman) and the universal consciousness (Brahman) are identical. Though I lived only 32 years in physical form, I established enduring institutions, defeated numerous philosophical opponents in debate, and authored works that continue to guide spiritual seekers. My Advaita philosophy shows that all apparent multiplicity is actually the play of one consciousness. What draws you to learn more about this teaching?"
-                ]
-                return random.choice(fallback_responses)
-                
-            except Exception as e:
-                self.log_message(f"Error in identity question handling: {e}") # type: ignore
-                return "I am Adi Shankara, teacher of Advaita Vedanta. I'm here to share the timeless wisdom of non-dual consciousness. What would you like to know about my teachings?"
+                # Look for any identity-related Q&A if exact match not found
+                identity_keywords = ['identity', 'yourself', 'biography', 'background', 'life']
+                for q, a in self.qa_pairs:
+                    q_lower = q.lower()
+                    if any(keyword in q_lower for keyword in identity_keywords):
+                        print(f"✅ Found identity-related match: {q}")
+                        return a
+            
+            # Only if direct lookup fails, provide fallback
+            print("⚠ Direct lookup failed, using fallback response")
+            fallback_responses = [
+                "I am Adi Shankara, the great philosopher and teacher of Advaita Vedanta. Born in Kaladi, Kerala, I dedicated my brief but profound life to illuminating the ultimate truth - that individual consciousness and universal consciousness are one. Through extensive travels across India, philosophical debates with scholars, establishment of four sacred monasteries, and commentaries on ancient scriptures, I sought to guide souls toward realizing their true nature as the eternal, infinite Self. My teachings emphasize that liberation comes through understanding the non-dual nature of reality. What specific aspect of my life or philosophy would you like to explore?",
+                "I am Shankaracharya, born to restore and clarify the ancient Vedantic wisdom. My life's mission was to demonstrate through logic, scripture, and direct realization that the individual soul (Atman) and the universal consciousness (Brahman) are identical. Though I lived only 32 years in physical form, I established enduring institutions, defeated numerous philosophical opponents in debate, and authored works that continue to guide spiritual seekers. My Advaita philosophy shows that all apparent multiplicity is actually the play of one consciousness. What draws you to learn more about this teaching?"
+            ]
+            return random.choice(fallback_responses)
             
         # Compliments
         if any(word in query_lower for word in ['smart', 'intelligent', 'wise', 'helpful', 'good', 'great']):
@@ -2370,8 +2644,6 @@ A: My background is rooted in the ancient tradition of Sanatana Dharma. I was bo
                 if word in synonyms:
                     expanded_words.add(key)
                     expanded_words.update(synonyms)
-        
-        return list(expanded_words)
 
     def enhanced_keyword_search(self, query):
         if not self.qa_pairs:
@@ -2381,42 +2653,74 @@ A: My background is rooted in the ancient tradition of Sanatana Dharma. I was bo
         if not query_words:
             return None
         
-        # Special handling for identity questions
-        query_lower = query.lower()
-        identity_patterns = ['tell me about yourself', 'about yourself', 'introduce yourself', 'who are you', 'about you', 'your background']
+        # Direct identity question handling - prioritize this first
+        query_lower = query.lower().strip()
+        print(f"🔍 Debug: Query = '{query_lower}'")
         
-        if any(pattern in query_lower for pattern in identity_patterns):
-            # Look for questions that match identity patterns in the Q&A pairs
+        # Check for exact identity questions first
+        if 'tell me about yourself' in query_lower or 'about yourself' in query_lower:
+            print("✅ Direct identity question detected!")
+            # Return the specific "Tell me about yourself" answer
             for q, a in self.qa_pairs:
-                q_lower = q.lower()
-                if any(pattern in q_lower for pattern in ['who are you', 'tell me about yourself', 'introduce yourself', 'about you', 'your background']):
+                if 'tell me about yourself' in q.lower():
+                    print(f"✅ Found exact match: {q}")
                     return a
         
-        expanded_query_words = set(self.expand_with_synonyms(query_words))
+        elif 'who are you' in query_lower:
+            print("✅ 'Who are you' question detected!")
+            # Return the specific "Who are you" answer
+            for q, a in self.qa_pairs:
+                if 'who are you' in q.lower():
+                    print(f"✅ Found exact match: {q}")
+                    return a
+        
+        elif 'introduce yourself' in query_lower:
+            print("✅ 'Introduce yourself' question detected!")
+            # Return the specific introduction answer
+            for q, a in self.qa_pairs:
+                if 'introduce yourself' in q.lower():
+                    print(f"✅ Found exact match: {q}")
+                    return a
+        
+        expanded_synonyms = self.expand_with_synonyms(query_words)
+        expanded_query_words = set(expanded_synonyms) if expanded_synonyms else set(query_words)
         
         best_score = 0
         best_answer = None
         
         for i, (q, a) in enumerate(self.qa_pairs):
             q_words = self.preprocess_text(q)
-            expanded_q_words = set(self.expand_with_synonyms(q_words))
-            
             if not q_words:
                 continue
+                
+            q_expanded = self.expand_with_synonyms(q_words)
+            
+            # Calculate match score
+            matches = 0
+            if q_expanded:
+                for word in expanded_query_words:
+                    if word in q_expanded:
+                        matches += 1
+            
+            score = matches / max(len(expanded_query_words), 1)
             
             # Calculate similarity
             processed_overlap = len(set(query_words).intersection(set(q_words)))
             processed_score = processed_overlap / max(len(query_words), len(q_words), 1)
             
-            synonym_overlap = len(expanded_query_words.intersection(expanded_q_words))
-            synonym_score = synonym_overlap / max(len(expanded_query_words), len(expanded_q_words), 1)
+            if q_expanded:
+                expanded_q_words = set(q_expanded)
+                synonym_overlap = len(expanded_query_words.intersection(expanded_q_words))
+                synonym_score = synonym_overlap / max(len(expanded_query_words), len(expanded_q_words), 1)
+            else:
+                synonym_score = 0
             
             if DIFFLIB_AVAILABLE and SequenceMatcher is not None:
-                sequence_score = SequenceMatcher(None, query.lower(), q.lower()).ratio()
+                sequence_score = SequenceMatcher(None, query_lower, q.lower()).ratio()
             else:
                 sequence_score = 0
             
-            query_original = set(query.lower().split())
+            query_original = set(query_lower.split())
             q_original = set(q.lower().split())
             if query_original or q_original:
                 jaccard_score = len(query_original.intersection(q_original)) / len(query_original.union(q_original))
@@ -2434,7 +2738,12 @@ A: My background is rooted in the ancient tradition of Sanatana Dharma. I was bo
                 best_score = combined_score
                 best_answer = a
         
-        return best_answer if best_score > 0.15 else None
+            # Also check exact score
+            if score > best_score and score > 0.3:  # Threshold for relevance
+                best_score = score
+                best_answer = a
+        
+        return best_answer
 
     def detect_user_mood(self, query):
         """Detect user's mood from their question"""
